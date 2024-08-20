@@ -1,0 +1,27 @@
+{
+  "canisters": {
+    "akai_backend": {
+      "candid": "src/akai_backend/akai_backend.did",
+      "package": "akai_backend",
+      "type": "rust"
+    },
+    "akai_frontend": {
+      "dependencies": [
+        "akai_backend"
+      ],
+      "source": [
+        "src/akai_frontend/dist"
+      ],
+      "type": "assets",
+      "workspace": "akai_frontend"
+    }
+  },
+  "defaults": {
+    "build": {
+      "args": "",
+      "packtool": ""
+    }
+  },
+  "output_env_file": ".env",
+  "version": 1
+}
