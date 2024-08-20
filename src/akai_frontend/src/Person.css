@@ -1,0 +1,23 @@
+.connect-wallet-button {
+  background-color: #1a73e8; /* Dark Blue */
+  color: white;
+  padding: 10px 20px;
+  font-size: 16px;
+  border: none;
+  border-radius: 8px; /* Curved Corners */
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+  text-align: center;
+}
+
+.connect-wallet-button:hover {
+  background-color: #1558b0; /* Slightly darker blue on hover */
+}
+
+.person-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  /* Add any additional styling for your Person component here */
+}

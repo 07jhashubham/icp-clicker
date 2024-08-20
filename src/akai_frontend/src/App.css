@@ -1,0 +1,73 @@
+body,
+html {
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  height: 100%;
+  font-family: Arial, sans-serif;
+  background-image: url("/src/images/background.png"); /* Ensure this path is correct */
+  background-size: cover;
+  background-position: center;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  overflow: hidden;
+}
+.container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: space-between;
+  height: 100%;
+  padding-bottom: 60px; /* Adjust to keep the bottom navigation visible */
+}
+
+.content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  width: 100%;
+}
+
+.incubator-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+}
+
+.incubator-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  background-color: rgba(0, 255, 0, 0.5); /* Adjust color and opacity */
+  transition: height 0.3s ease; /* Smooth transition for fill animation */
+}
+
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  padding: 10px;
+  justify-content: center;
+}
+
+.alien-box {
+  width: 100px;
+  height: 100px;
+  background-color: transparent;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  border-radius: 10px;
+  position: relative;
+  overflow: hidden;
+}
+
+.alien-image {
+  width: 80%;
+  height: 80%;
+  object-fit: contain;
+}
