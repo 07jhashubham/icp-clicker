@@ -1,10 +1,9 @@
 use anyhow::{anyhow, Result};
 use ic_sqlite::CONN;
 
-
 pub fn create_tables_if_not_exist() -> Result<()> {
     let tables = ["User", "Aliens", "Task", "Badges"];
-    let conn = CONN.lock().map_err(|e| anyhow!("{}",e))?;
+    let conn = CONN.lock().map_err(|e| anyhow!("{}", e))?;
     let table_exists = tables.iter().all(|table| {
         conn.query_row(
             &format!(
@@ -63,12 +62,10 @@ CREATE TABLE User (
 );
 
             COMMIT;
-            "
-        ).map_err(|e| anyhow!("Failed to create tables: {}", e))?;
+            ",
+        )
+        .map_err(|e| anyhow!("Failed to create tables: {}", e))?;
     }
 
     Ok(())
 }
-
-
-

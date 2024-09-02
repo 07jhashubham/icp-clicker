@@ -1,3 +1,7 @@
-service : {
-    "greet": (text) -> (text) query;
+type Result = variant { Ok; Err : text };
+service : () -> {
+  create_new_user : (text, opt text, opt text, opt text, opt text) -> (Result);
+  get_all_users : () -> (text) query;
+  update_email : (text, text) -> (Result);
+  update_twitter : (text, text) -> (Result);
 }

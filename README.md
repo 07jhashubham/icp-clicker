@@ -1,4 +1,10 @@
-# IMPORTANT INSTRUCTIONS
+# Generating candids
+Run `generate.sh` to generate candids for frontend definitions. 
+- Start by installing `candid-extractor` with `cargo install candid-extractor`. 
+- Then, make the script executable using `chmod +x generate.sh` 
+- Execute it with `./generate.sh`
+
+# NOTE
 If `dfx deploy --playground` is failing because `assetstorage.did` cannot be found, follow this workaround:
 
 Create the file `.dfx/local/canisters/akai_frontend/assetstorage.did` with the following content:
