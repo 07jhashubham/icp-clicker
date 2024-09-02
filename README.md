@@ -1,61 +1,284 @@
-# `akai`
+# IMPORTANT INSTRUCTIONS
+If `dfx deploy --playground` is failing because `assetstorage.did` cannot be found, follow this workaround:
 
-Welcome to your new `akai` project and to the Internet Computer development community. By default, creating a new project adds this README and some template files to your project directory. You can edit these template files to customize your project and to include your own code to speed up the development cycle.
+Create the file `.dfx/local/canisters/akai_frontend/assetstorage.did` with the following content:
 
-To get started, you might want to explore the project directory structure and the default configuration file. Working with this project in your development environment will not affect any production deployment or identity tokens.
+  ```
+  type BatchId = nat;
+type ChunkId = nat;
+type Key = text;
+type Time = int;
 
-To learn more before you start working with `akai`, see the following documentation available online:
+type CreateAssetArguments = record {
+  key : Key;
+  content_type : text;
+  max_age : opt nat64;
+  headers : opt vec HeaderField;
+  enable_aliasing : opt bool;
+  allow_raw_access : opt bool;
+};
 
-- [Quick Start](https://internetcomputer.org/docs/current/developer-docs/setup/deploy-locally)
-- [SDK Developer Tools](https://internetcomputer.org/docs/current/developer-docs/setup/install)
-- [Rust Canister Development Guide](https://internetcomputer.org/docs/current/developer-docs/backend/rust/)
-- [ic-cdk](https://docs.rs/ic-cdk)
-- [ic-cdk-macros](https://docs.rs/ic-cdk-macros)
-- [Candid Introduction](https://internetcomputer.org/docs/current/developer-docs/backend/candid/)
+// Add or change content for an asset, by content encoding
+type SetAssetContentArguments = record {
+  key : Key;
+  content_encoding : text;
+  chunk_ids : vec ChunkId;
+  sha256 : opt blob;
+};
 
-If you want to start working on your project right away, you might want to try the following commands:
+// Remove content for an asset, by content encoding
+type UnsetAssetContentArguments = record {
+  key : Key;
+  content_encoding : text;
+};
 
-```bash
-cd akai/
-dfx help
-dfx canister --help
+// Delete an asset
+type DeleteAssetArguments = record {
+  key : Key;
+};
+
+// Reset everything
+type ClearArguments = record {};
+
+type BatchOperationKind = variant {
+  CreateAsset : CreateAssetArguments;
+  SetAssetContent : SetAssetContentArguments;
+
+  SetAssetProperties : SetAssetPropertiesArguments;
+
+  UnsetAssetContent : UnsetAssetContentArguments;
+  DeleteAsset : DeleteAssetArguments;
+
+  Clear : ClearArguments;
+};
+
+type CommitBatchArguments = record {
+  batch_id : BatchId;
+  operations : vec BatchOperationKind;
+};
+
+type CommitProposedBatchArguments = record {
+  batch_id : BatchId;
+  evidence : blob;
+};
+
+type ComputeEvidenceArguments = record {
+  batch_id : BatchId;
+  max_iterations : opt nat16;
+};
+
+type DeleteBatchArguments = record {
+  batch_id : BatchId;
+};
+
+type HeaderField = record { text; text };
+
+type HttpRequest = record {
+  method : text;
+  url : text;
+  headers : vec HeaderField;
+  body : blob;
+  certificate_version : opt nat16;
+};
+
+type HttpResponse = record {
+  status_code : nat16;
+  headers : vec HeaderField;
+  body : blob;
+  streaming_strategy : opt StreamingStrategy;
+};
+
+type StreamingCallbackHttpResponse = record {
+  body : blob;
+  token : opt StreamingCallbackToken;
+};
+
+type StreamingCallbackToken = record {
+  key : Key;
+  content_encoding : text;
+  index : nat;
+  sha256 : opt blob;
+};
+
+type StreamingStrategy = variant {
+  Callback : record {
+    callback : func(StreamingCallbackToken) -> (opt StreamingCallbackHttpResponse) query;
+    token : StreamingCallbackToken;
+  };
+};
+
+type SetAssetPropertiesArguments = record {
+  key : Key;
+  max_age : opt opt nat64;
+  headers : opt opt vec HeaderField;
+  allow_raw_access : opt opt bool;
+  is_aliased : opt opt bool;
+};
+
+type ConfigurationResponse = record {
+  max_batches : opt nat64;
+  max_chunks : opt nat64;
+  max_bytes : opt nat64;
+};
+
+type ConfigureArguments = record {
+  max_batches : opt opt nat64;
+  max_chunks : opt opt nat64;
+  max_bytes : opt opt nat64;
+};
+
+type Permission = variant {
+  Commit;
+  ManagePermissions;
+  Prepare;
+};
+
+type GrantPermission = record {
+  to_principal : principal;
+  permission : Permission;
+};
+type RevokePermission = record {
+  of_principal : principal;
+  permission : Permission;
+};
+type ListPermitted = record { permission : Permission };
+
+type ValidationResult = variant { Ok : text; Err : text };
+
+type AssetCanisterArgs = variant {
+  Init : InitArgs;
+  Upgrade : UpgradeArgs;
+};
+
+type InitArgs = record {};
+
+type UpgradeArgs = record {
+  set_permissions : opt SetPermissions;
+};
+
+/// Sets the list of principals granted each permission.
+type SetPermissions = record {
+  prepare : vec principal;
+  commit : vec principal;
+  manage_permissions : vec principal;
+};
+
+service : (asset_canister_args : opt AssetCanisterArgs) -> {
+  api_version : () -> (nat16) query;
+
+  get : (
+    record {
+      key : Key;
+      accept_encodings : vec text;
+    },
+  ) -> (
+    record {
+      content : blob; // may be the entirety of the content, or just chunk index 0
+      content_type : text;
+      content_encoding : text;
+      sha256 : opt blob; // sha256 of entire asset encoding, calculated by dfx and passed in SetAssetContentArguments
+      total_length : nat; // all chunks except last have size == content.size()
+    },
+  ) query;
+
+  // if get() returned chunks > 1, call this to retrieve them.
+  // chunks may or may not be split up at the same boundaries as presented to create_chunk().
+  get_chunk : (
+    record {
+      key : Key;
+      content_encoding : text;
+      index : nat;
+      sha256 : opt blob; // sha256 of entire asset encoding, calculated by dfx and passed in SetAssetContentArguments
+    },
+  ) -> (record { content : blob }) query;
+
+  list : (record {}) -> (
+    vec record {
+      key : Key;
+      content_type : text;
+      encodings : vec record {
+        content_encoding : text;
+        sha256 : opt blob; // sha256 of entire asset encoding, calculated by dfx and passed in SetAssetContentArguments
+        length : nat; // Size of this encoding's blob. Calculated when uploading assets.
+        modified : Time;
+      };
+    },
+  ) query;
+
+  certified_tree : (record {}) -> (
+    record {
+      certificate : blob;
+      tree : blob;
+    },
+  ) query;
+
+  create_batch : (record {}) -> (record { batch_id : BatchId });
+
+  create_chunk : (record { batch_id : BatchId; content : blob }) -> (record { chunk_id : ChunkId });
+
+  // Perform all operations successfully, or reject
+  commit_batch : (CommitBatchArguments) -> ();
+
+  // Save the batch operations for later commit
+  propose_commit_batch : (CommitBatchArguments) -> ();
+
+  // Given a batch already proposed, perform all operations successfully, or reject
+  commit_proposed_batch : (CommitProposedBatchArguments) -> ();
+
+  // Compute a hash over the CommitBatchArguments.  Call until it returns Some(evidence).
+  compute_evidence : (ComputeEvidenceArguments) -> (opt blob);
+
+  // Delete a batch that has been created, or proposed for commit, but not yet committed
+  delete_batch : (DeleteBatchArguments) -> ();
+
+  create_asset : (CreateAssetArguments) -> ();
+  set_asset_content : (SetAssetContentArguments) -> ();
+  unset_asset_content : (UnsetAssetContentArguments) -> ();
+
+  delete_asset : (DeleteAssetArguments) -> ();
+
+  clear : (ClearArguments) -> ();
+
+  // Single call to create an asset with content for a single content encoding that
+  // fits within the message ingress limit.
+  store : (
+    record {
+      key : Key;
+      content_type : text;
+      content_encoding : text;
+      content : blob;
+      sha256 : opt blob;
+    },
+  ) -> ();
+
+  http_request : (request : HttpRequest) -> (HttpResponse) query;
+  http_request_streaming_callback : (token : StreamingCallbackToken) -> (opt StreamingCallbackHttpResponse) query;
+
+  authorize : (principal) -> ();
+  deauthorize : (principal) -> ();
+  list_authorized : () -> (vec principal);
+  grant_permission : (GrantPermission) -> ();
+  revoke_permission : (RevokePermission) -> ();
+  list_permitted : (ListPermitted) -> (vec principal);
+  take_ownership : () -> ();
+
+  get_asset_properties : (key : Key) -> (
+    record {
+      max_age : opt nat64;
+      headers : opt vec HeaderField;
+      allow_raw_access : opt bool;
+      is_aliased : opt bool;
+    },
+  ) query;
+  set_asset_properties : (SetAssetPropertiesArguments) -> ();
+
+  get_configuration : () -> (ConfigurationResponse);
+  configure : (ConfigureArguments) -> ();
+
+  validate_grant_permission : (GrantPermission) -> (ValidationResult);
+  validate_revoke_permission : (RevokePermission) -> (ValidationResult);
+  validate_take_ownership : () -> (ValidationResult);
+  validate_commit_proposed_batch : (CommitProposedBatchArguments) -> (ValidationResult);
+  validate_configure : (ConfigureArguments) -> (ValidationResult);
+};
 ```
-
-## Running the project locally
-
-If you want to test your project locally, you can use the following commands:
-
-```bash
-# Starts the replica, running in the background
-dfx start --background
-
-# Deploys your canisters to the replica and generates your candid interface
-dfx deploy
-```
-
-Once the job completes, your application will be available at `http://localhost:4943?canisterId={asset_canister_id}`.
-
-If you have made changes to your backend canister, you can generate a new candid interface with
-
-```bash
-npm run generate
-```
-
-at any time. This is recommended before starting the frontend development server, and will be run automatically any time you run `dfx deploy`.
-
-If you are making frontend changes, you can start a development server with
-
-```bash
-npm start
-```
-
-Which will start a server at `http://localhost:8080`, proxying API requests to the replica at port 4943.
-
-### Note on frontend environment variables
-
-If you are hosting frontend code somewhere without using DFX, you may need to make one of the following adjustments to ensure your project does not fetch the root key in production:
-
-- set`DFX_NETWORK` to `ic` if you are using Webpack
-- use your own preferred method to replace `process.env.DFX_NETWORK` in the autogenerated declarations
-  - Setting `canisters -> {asset_canister_id} -> declarations -> env_override to a string` in `dfx.json` will replace `process.env.DFX_NETWORK` with the string in the autogenerated declarations
-- Write your own `createActor` constructor
