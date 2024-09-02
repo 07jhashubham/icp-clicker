@@ -1,8 +1,10 @@
 use anyhow::{anyhow, Result};
-use rusqlite::Connection;
+use ic_sqlite::CONN;
 
-pub fn create_tables_if_not_exist(conn: &Connection) -> Result<()> {
+
+pub fn create_tables_if_not_exist() -> Result<()> {
     let tables = ["User", "Aliens", "Task", "Badges"];
+    let conn = CONN.lock().map_err(|e| anyhow!("{}",e))?;
     let table_exists = tables.iter().all(|table| {
         conn.query_row(
             &format!(
