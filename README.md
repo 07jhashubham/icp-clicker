@@ -1,3 +1,17 @@
+# TODO:
+- Instead of storing everything in memory, implement compression and uploading by streaming.
+- Consider using multithreading and sharding of the database to handle large files more efficiently.
+
+
+# Serialization and Deserialization Process
+
+Serialization and deserialization are performed using the following steps:
+
+1. **Generate the Database as Bytes**
+2. **Compress it using `flate2` and `gzip`**
+3. **Base64 Encode the Compressed Data**
+
+
 # Generating candids
 Run `generate.sh` to generate candids for frontend definitions. 
 - Start by installing `candid-extractor` with `cargo install candid-extractor`. 
@@ -5,8 +19,10 @@ Run `generate.sh` to generate candids for frontend definitions.
 - Execute it with `./generate.sh`
 
 # Backup System
-To use the backup system add this code Azure Function Code
-- Create a C# file and add this code:
+To utilize the backup system, follow these steps:
+
+- Create a C# file in your project.
+- Add the following code for the Azure Function:
 ```
 using System.IO;
 using Microsoft.AspNetCore.Mvc;

@@ -1,16 +1,10 @@
-use std::{env, io::Read, sync::Mutex};
+use std::{env, fs::File, io::{Read, Write}};
 
-use crate::{
-    aliens::Aliens,
-    badges::Badges,
-    task::{Task, TaskType},
-    user::User,
-};
 use anyhow::{anyhow, Ok, Result};
-use candid::Principal;
+use base64::{engine::general_purpose, Engine};
+use candid::{Nat, Principal};
+use flate2::{write::GzEncoder, Compression};
 use ic_sqlite::CONN;
-use lazy_static::lazy_static;
-use serde_json::Value;
 pub fn create_tables_if_not_exist() -> Result<()> {
     let tables = ["User", "Aliens", "Task", "Badges"];
     let conn = CONN.lock().map_err(|e| anyhow!("{}", e))?;
@@ -92,16 +86,48 @@ where
 
 use ic_cdk::api::{call::call, management_canister::http_request::{CanisterHttpRequestArgument, HttpMethod, HttpResponse}};
 
-pub async fn backup() {
-    let account = std::env::var("STORAGE_ACCOUNT").expect("missing STORAGE_ACCOUNT");
-    let access_key = std::env::var("STORAGE_ACCESS_KEY").expect("missing STORAGE_ACCESS_KEY");
-    let container = std::env::var("STORAGE_CONTAINER").expect("missing STORAGE_CONTAINER");
-    let blob_name = std::env::var("STORAGE_BLOB_NAME").expect("missing STORAGE_BLOB_NAME");
-    let file_content = "your file content here";  // You need to serialize the content properly.
+fn dump_and_compress_database() -> Vec<u8> {
+    let conn = CONN.lock().unwrap();
+    let mut output = Vec::new();
 
+    // Here we dump the database into memory
+    let mut stmt = conn.prepare("PRAGMA database_list;").unwrap();
+    let mut rows = stmt.query([]).unwrap();
+    while let Some(row) = rows.next().unwrap() {
+        let file_name: String = row.get(1).unwrap();
+        let sql = format!("BACKUP TO '{}'", file_name);
+        conn.execute_batch(&sql).unwrap();
+        
+        let mut file = File::open(file_name).unwrap();
+        let mut buffer = Vec::new();
+        file.read_to_end(&mut buffer).unwrap();
+        output.extend(buffer);
+    }
+
+    // Compress the data using Gzip
+    let mut encoder = GzEncoder::new(Vec::new(), Compression::best());
+    encoder.write_all(&output).unwrap();
+    let compressed_data = encoder.finish().unwrap();
+    
+    compressed_data
+}
+
+
+pub async fn backup() {
+    let account = env::var("STORAGE_ACCOUNT").expect("missing STORAGE_ACCOUNT");
+    let access_key = env::var("STORAGE_ACCESS_KEY").expect("missing STORAGE_ACCESS_KEY");
+    let container = env::var("STORAGE_CONTAINER").expect("missing STORAGE_CONTAINER");
+    let blob_name = env::var("STORAGE_BLOB_NAME").expect("missing STORAGE_BLOB_NAME");
+    let azure_function_url = env::var("AZURE_BACKUP_FUNCTION_URL").unwrap_or("your-function-url".to_string());
+
+    // Dump the database content to a byte vector
+    let file_content = dump_and_compress_database();
+
+    // Convert the byte vector to a base64 encoded string
+    let base64_content = general_purpose::STANDARD.encode(file_content);
     let function_url = format!(
-        "https://your-function-url/api/UploadBlob?account={}&accessKey={}&container={}&blobName={}&fileContent={}",
-        account, access_key, container, blob_name, file_content
+        "https://{}/api/UploadBlob?account={}&accessKey={}&container={}&blobName={}&fileContent={}",
+        azure_function_url, account, access_key, container, blob_name, base64_content
     );
 
     let request = CanisterHttpRequestArgument {
@@ -121,7 +147,7 @@ pub async fn backup() {
     .await
     .unwrap();
 
-    if response.status == candid::Nat::from(200 as usize) {
+    if response.status == Nat::from(200 as usize) {
         ic_cdk::println!("File uploaded successfully.");
     } else {
         ic_cdk::println!(
@@ -130,3 +156,14 @@ pub async fn backup() {
         );
     }
 }
+
+
+// SERIALIZATION AND DESERIALIZATION IS DONE USING THIS PROCESS
+//          -> Generate the db as bytes
+//          -> Compress it by using flate2 and gzip
+//          -> Base64 Encode
+
+// #TODO: 
+//      Rather than storing everything in memory do the compression and 
+//      uploading by streaming it rather than loading the entire file on the memory 
+//      and then uploading. Hint: Use multithreading and sharding of db

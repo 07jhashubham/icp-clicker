@@ -15,7 +15,7 @@ lazy_static! {
         match env::var("COMMIT_BACKUPS").as_deref() {
             Ok("true") => true,
             Ok("false") => false,
-            _ => panic!("Invalid COMMIT_BACKUPS value in environment variable"),
+            _ => false,
         }
     };
 
