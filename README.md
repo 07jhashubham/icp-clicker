@@ -25,6 +25,7 @@ To utilize the backup system, follow these steps:
 - Add the following code for the Azure Function:
 ```
 using System.IO;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Azure.WebJobs;
 using Microsoft.Azure.WebJobs.Extensions.Http;
@@ -33,27 +34,43 @@ using Microsoft.Extensions.Logging;
 using Azure.Storage.Blobs;
 
 public static async Task<IActionResult> Run(
-    [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest req,
+    [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
     ILogger log)
 {
     log.LogInformation("C# HTTP trigger function processed a request.");
 
-    string account = req.Query["account"];
-    string accessKey = req.Query["accessKey"];
-    string container = req.Query["container"];
-    string blobName = req.Query["blobName"];
-    string fileContent = req.Query["fileContent"];
+    // Read and deserialize the request body
+    string requestBody = await new StreamReader(req.Body).ReadToEndAsync();
+    var data = JsonSerializer.Deserialize<RequestData>(requestBody);
 
+    // Extract information from the request
+    var account = data.Account;
+    var accessKey = data.AccessKey;
+    var container = data.Container;
+    var blobName = data.BlobName;
+    var fileContent = data.FileContent;
+
+    // Initialize the Blob Service Client
     var blobServiceClient = new BlobServiceClient(new Uri($"https://{account}.blob.core.windows.net"), new StorageSharedKeyCredential(account, accessKey));
     var blobContainerClient = blobServiceClient.GetBlobContainerClient(container);
     var blobClient = blobContainerClient.GetBlobClient(blobName);
 
-    using (var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(fileContent)))
+    // Upload the file content to Blob Storage
+    using (var stream = new MemoryStream(System.Convert.FromBase64String(fileContent)))
     {
         await blobClient.UploadAsync(stream, true);
     }
 
     return new OkObjectResult("File uploaded successfully.");
+}
+
+public class RequestData
+{
+    public string Account { get; set; }
+    public string AccessKey { get; set; }
+    public string Container { get; set; }
+    public string BlobName { get; set; }
+    public string FileContent { get; set; }
 }
 
 ```

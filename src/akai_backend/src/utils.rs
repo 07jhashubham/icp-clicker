@@ -1,5 +1,5 @@
 use std::{env, fs::File, io::{Read, Write}};
-
+use ic_cdk::api::{call::call, management_canister::http_request::{CanisterHttpRequestArgument, HttpHeader, HttpMethod, HttpResponse}};
 use anyhow::{anyhow, Ok, Result};
 use base64::{engine::general_purpose, Engine};
 use candid::{Nat, Principal};
@@ -74,17 +74,6 @@ CREATE TABLE User (
     Ok(())
 }
 
-pub fn resolve_option<T>(opt: Option<T>) -> String
-where
-    T: ToString,
-{
-    match opt {
-        Some(o) => o.to_string(),
-        None => "NULL".to_string(),
-    }
-}
-
-use ic_cdk::api::{call::call, management_canister::http_request::{CanisterHttpRequestArgument, HttpMethod, HttpResponse}};
 
 fn dump_and_compress_database() -> Vec<u8> {
     let conn = CONN.lock().unwrap();
@@ -125,16 +114,24 @@ pub async fn backup() {
 
     // Convert the byte vector to a base64 encoded string
     let base64_content = general_purpose::STANDARD.encode(file_content);
-    let function_url = format!(
-        "https://{}/api/UploadBlob?account={}&accessKey={}&container={}&blobName={}&fileContent={}",
-        azure_function_url, account, access_key, container, blob_name, base64_content
-    );
+
+    // Prepare JSON payload for POST request
+    let payload = serde_json::json!({
+        "account": account,
+        "accessKey": access_key,
+        "container": container,
+        "blobName": blob_name,
+        "fileContent": base64_content,
+    });
 
     let request = CanisterHttpRequestArgument {
-        url: function_url,
-        method: HttpMethod::GET,
-        body: None,
-        headers: vec![],
+        url: azure_function_url,
+        method: HttpMethod::POST,
+        body: Some(payload.to_string().into_bytes()),
+        headers: vec![HttpHeader{
+            name: "Content-Type".to_string(),
+            value: "application/json".to_string()
+        }],
         max_response_bytes: None,
         transform: None,
     };
@@ -156,14 +153,3 @@ pub async fn backup() {
         );
     }
 }
-
-
-// SERIALIZATION AND DESERIALIZATION IS DONE USING THIS PROCESS
-//          -> Generate the db as bytes
-//          -> Compress it by using flate2 and gzip
-//          -> Base64 Encode
-
-// #TODO: 
-//      Rather than storing everything in memory do the compression and 
-//      uploading by streaming it rather than loading the entire file on the memory 
-//      and then uploading. Hint: Use multithreading and sharding of db
