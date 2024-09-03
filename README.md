@@ -7,9 +7,9 @@
 
 Serialization and deserialization are performed using the following steps:
 
-1. **Generate the Database as Bytes**
-2. **Compress it using `flate2` and `gzip`**
-3. **Base64 Encode the Compressed Data**
+1. Generate the Database as Bytes
+2. Compress it using `flate2` and `gzip`
+3. Base64 Encode the Compressed Data
 
 
 # Generating candids
@@ -73,6 +73,40 @@ public class RequestData
     public string FileContent { get; set; }
 }
 
+```
+
+# Backup System Chunked Stream
+To utilize the chunked streamed backup system, follow these steps:
+
+- Create a C# file in your project.
+- Add the following code for the Azure Function:
+```
+public static async Task<IActionResult> Run(
+    [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
+    ILogger log)
+{
+    log.LogInformation("C# HTTP trigger function processed a request.");
+
+    string account = req.Query["account"];
+    string accessKey = req.Query["accessKey"];
+    string container = req.Query["container"];
+    string blobName = req.Query["blobName"];
+    string partNumber = req.Query["partNumber"];
+
+    string fileContent = await new StreamReader(req.Body).ReadToEndAsync();
+    byte[] data = Convert.FromBase64String(fileContent);
+
+    var blobServiceClient = new BlobServiceClient(new Uri($"https://{account}.blob.core.windows.net"), new StorageSharedKeyCredential(account, accessKey));
+    var blobContainerClient = blobServiceClient.GetBlobContainerClient(container);
+    var blobClient = blobContainerClient.GetBlobClient(blobName);
+
+    using (var stream = new MemoryStream(data))
+    {
+        await blobClient.UploadAsync(stream, overwrite: true);
+    }
+
+    return new OkObjectResult($"File uploaded successfully. Part: {partNumber}");
+}
 ```
 # NOTE
 If `dfx deploy --playground` is failing because `assetstorage.did` cannot be found, follow this workaround:

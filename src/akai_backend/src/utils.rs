@@ -1,4 +1,4 @@
-use std::{env, fs::File, io::{Read, Write}};
+use std::{env, fs::File, io::{self, BufReader, Read, Write}};
 use ic_cdk::api::{call::call, management_canister::http_request::{CanisterHttpRequestArgument, HttpHeader, HttpMethod, HttpResponse}};
 use anyhow::{anyhow, Ok, Result};
 use base64::{engine::general_purpose, Engine};
@@ -152,4 +152,89 @@ pub async fn backup() {
             response.status
         );
     }
+}
+
+const CHUNK_SIZE: usize = 1024 * 1024; // 1 MB chunk size
+
+pub async fn backup_chunked() {
+    let account = env::var("STORAGE_ACCOUNT").expect("missing STORAGE_ACCOUNT");
+    let access_key = env::var("STORAGE_ACCESS_KEY").expect("missing STORAGE_ACCESS_KEY");
+    let container = env::var("STORAGE_CONTAINER").expect("missing STORAGE_CONTAINER");
+    let blob_name = env::var("STORAGE_BLOB_NAME").expect("missing STORAGE_BLOB_NAME");
+    let azure_function_url = env::var("AZURE_BACKUP_FUNCTION_URL").unwrap_or("your-function-url".to_string());
+
+    let mut reader = stream_and_compress_database().unwrap();
+
+    let mut buffer = vec![0; CHUNK_SIZE];
+    let mut part_number = 0;
+
+    while let Result::Ok(bytes_read) = reader.read(&mut buffer) {
+        if bytes_read == 0 {
+            break;
+        }
+
+        part_number += 1;
+        let chunk = &buffer[..bytes_read];
+        let base64_content = general_purpose::STANDARD.encode(chunk);
+
+        let function_url = format!(
+            "https://{}/api/UploadBlob?account={}&accessKey={}&container={}&blobName={}&partNumber={}",
+            azure_function_url, account, access_key, container, blob_name, part_number
+        );
+
+        let request = CanisterHttpRequestArgument {
+            url: function_url,
+            method: HttpMethod::POST,
+            body: Some(base64_content.into_bytes()),
+            headers: vec![],
+            max_response_bytes: None,
+            transform: None,
+        };
+
+        let (response,): (HttpResponse,) = call(
+            Principal::management_canister(),
+            "http_request",
+            (request,),
+        )
+        .await
+        .unwrap();
+
+        if response.status != Nat::from(200 as usize) {
+            ic_cdk::println!(
+                "Failed to upload chunk {}. Status: {}",
+                part_number,
+                response.status
+            );
+            return;
+        }
+    }
+
+    ic_cdk::println!("File uploaded successfully.");
+}
+
+fn stream_and_compress_database() -> io::Result<impl Read> {
+    let conn = CONN.lock().unwrap();
+
+    // Prepare to dump and compress the database
+    let mut output = Vec::new();
+    let mut stmt = conn.prepare("PRAGMA database_list;").unwrap();
+    let mut rows = stmt.query([]).unwrap();
+
+    while let Some(row) = rows.next().unwrap() {
+        let file_name: String = row.get(1).unwrap();
+        let sql = format!("BACKUP TO '{}'", file_name);
+        conn.execute_batch(&sql).unwrap();
+
+        let mut file = File::open(file_name)?;
+        let mut buffer = Vec::new();
+        file.read_to_end(&mut buffer)?;
+
+        output.extend(buffer);
+    }
+
+    // Compress the data with GzEncoder
+    let pipe_reader = io::Cursor::new(output);
+    let encoder = GzEncoder::new(pipe_reader, Compression::best());
+
+    Result::Ok(encoder)
 }
