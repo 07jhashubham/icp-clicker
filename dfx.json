@@ -4,7 +4,7 @@
       "candid": "src/akai_backend/akai_backend.did",
       "package": "akai_backend",
       "type": "rust",
-      "optimize": "Oz"
+      "optimize": "size"
     },
     "akai_frontend": {
       "dependencies": [

@@ -1,17 +1,9 @@
-use std::{env, io::Read, sync::Mutex};
+use std::{env, io::Read};
 
-use crate::{
-    aliens::Aliens,
-    badges::Badges,
-    task::{Task, TaskType},
-    user::User,
-};
 use anyhow::{anyhow, Ok, Result};
 use azure_storage::prelude::*;
 use azure_storage_blobs::prelude::*;
 use ic_sqlite::CONN;
-use lazy_static::lazy_static;
-use serde_json::Value;
 pub fn create_tables_if_not_exist() -> Result<()> {
     let tables = ["User", "Aliens", "Task", "Badges"];
     let conn = CONN.lock().map_err(|e| anyhow!("{}", e))?;
@@ -79,16 +71,6 @@ CREATE TABLE User (
     }
 
     Ok(())
-}
-
-pub fn resolve_option<T>(opt: Option<T>) -> String
-where
-    T: ToString,
-{
-    match opt {
-        Some(o) => o.to_string(),
-        None => "NULL".to_string(),
-    }
 }
 
 pub async fn backup() {
