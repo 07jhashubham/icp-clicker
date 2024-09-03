@@ -1,20 +1,21 @@
-use anyhow::{anyhow, Result};
+use anyhow::Result;
 use ic_cdk::{query, update};
 use ic_sqlite::CONN;
+use serde::{Deserialize, Serialize};
 
-#[derive(Debug)]
+#[derive(Debug, Serialize, Deserialize)]
 pub struct User {
-    name: String,
-    wallet_address: String,
-    badges: Option<String>, // Adjust types as needed
-    clicks: i32,
-    email: Option<String>,
-    twitter: Option<String>,
-    instagram: Option<String>,
-    exp: i32,
-    friends: Option<String>,
-    tasks: Option<String>,
-    aliens: Option<String>,
+    pub name: String,
+    pub wallet_address: String,
+    pub badges: Option<String>, // Adjust types as needed
+    pub clicks: i32,
+    pub email: Option<String>,
+    pub twitter: Option<String>,
+    pub instagram: Option<String>,
+    pub exp: i32,
+    pub friends: Option<String>,
+    pub tasks: Option<String>,
+    pub aliens: Option<String>,
 }
 
 #[update]
@@ -49,7 +50,7 @@ pub fn create_new_user(
             $2,    -- wallet_address
             NULLIF($3, 'NULL'),    -- badges (UUID) or NULL
             $4,    -- clicks
-            $5,    -- email
+            NULLIF($5, 'NULL'),    -- email
             NULLIF($6, 'NULL'),    -- twitter or NULL
             $7,    -- instagram
             $8,    -- exp
@@ -135,9 +136,7 @@ pub fn get_all_users() -> String {
         })
         .unwrap();
 
-    for user in user_iter {
-        return format!("{:?}", user);
-    }
+    let u = user_iter.map(|u| u.unwrap()).collect::<Vec<_>>();
 
-    return "".to_string();
+    return serde_json::to_string(&u).unwrap();
 }
