@@ -4,6 +4,43 @@ Run `generate.sh` to generate candids for frontend definitions.
 - Then, make the script executable using `chmod +x generate.sh` 
 - Execute it with `./generate.sh`
 
+# Backup System
+To use the backup system add this code Azure Function Code
+- Create a C# file and add this code:
+```
+using System.IO;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.Azure.WebJobs;
+using Microsoft.Azure.WebJobs.Extensions.Http;
+using Microsoft.AspNetCore.Http;
+using Microsoft.Extensions.Logging;
+using Azure.Storage.Blobs;
+
+public static async Task<IActionResult> Run(
+    [HttpTrigger(AuthorizationLevel.Function, "get", Route = null)] HttpRequest req,
+    ILogger log)
+{
+    log.LogInformation("C# HTTP trigger function processed a request.");
+
+    string account = req.Query["account"];
+    string accessKey = req.Query["accessKey"];
+    string container = req.Query["container"];
+    string blobName = req.Query["blobName"];
+    string fileContent = req.Query["fileContent"];
+
+    var blobServiceClient = new BlobServiceClient(new Uri($"https://{account}.blob.core.windows.net"), new StorageSharedKeyCredential(account, accessKey));
+    var blobContainerClient = blobServiceClient.GetBlobContainerClient(container);
+    var blobClient = blobContainerClient.GetBlobClient(blobName);
+
+    using (var stream = new MemoryStream(System.Text.Encoding.UTF8.GetBytes(fileContent)))
+    {
+        await blobClient.UploadAsync(stream, true);
+    }
+
+    return new OkObjectResult("File uploaded successfully.");
+}
+
+```
 # NOTE
 If `dfx deploy --playground` is failing because `assetstorage.did` cannot be found, follow this workaround:
 
@@ -288,3 +325,5 @@ service : (asset_canister_args : opt AssetCanisterArgs) -> {
   validate_configure : (ConfigureArguments) -> (ValidationResult);
 };
 ```
+
+

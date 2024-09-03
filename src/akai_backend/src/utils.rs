@@ -1,9 +1,16 @@
-use std::{env, io::Read};
+use std::{env, io::Read, sync::Mutex};
 
+use crate::{
+    aliens::Aliens,
+    badges::Badges,
+    task::{Task, TaskType},
+    user::User,
+};
 use anyhow::{anyhow, Ok, Result};
-use azure_storage::prelude::*;
-use azure_storage_blobs::prelude::*;
+use candid::Principal;
 use ic_sqlite::CONN;
+use lazy_static::lazy_static;
+use serde_json::Value;
 pub fn create_tables_if_not_exist() -> Result<()> {
     let tables = ["User", "Aliens", "Task", "Badges"];
     let conn = CONN.lock().map_err(|e| anyhow!("{}", e))?;
@@ -73,30 +80,53 @@ CREATE TABLE User (
     Ok(())
 }
 
+pub fn resolve_option<T>(opt: Option<T>) -> String
+where
+    T: ToString,
+{
+    match opt {
+        Some(o) => o.to_string(),
+        None => "NULL".to_string(),
+    }
+}
+
+use ic_cdk::api::{call::call, management_canister::http_request::{CanisterHttpRequestArgument, HttpMethod, HttpResponse}};
+
 pub async fn backup() {
-    let file_name = "main.db";
+    let account = std::env::var("STORAGE_ACCOUNT").expect("missing STORAGE_ACCOUNT");
+    let access_key = std::env::var("STORAGE_ACCESS_KEY").expect("missing STORAGE_ACCESS_KEY");
+    let container = std::env::var("STORAGE_CONTAINER").expect("missing STORAGE_CONTAINER");
+    let blob_name = std::env::var("STORAGE_BLOB_NAME").expect("missing STORAGE_BLOB_NAME");
+    let file_content = "your file content here";  // You need to serialize the content properly.
 
-    // Retrieve account name and access key from environment variables
-    let account = env::var("STORAGE_ACCOUNT").expect("missing STORAGE_ACCOUNT");
-    let access_key = env::var("STORAGE_ACCESS_KEY").expect("missing STORAGE_ACCOUNT_KEY");
-    let container = env::var("STORAGE_CONTAINER").expect("missing STORAGE_CONTAINER");
-    let blob_name = env::var("STORAGE_BLOB_NAME").expect("missing STORAGE_BLOB_NAME");
+    let function_url = format!(
+        "https://your-function-url/api/UploadBlob?account={}&accessKey={}&container={}&blobName={}&fileContent={}",
+        account, access_key, container, blob_name, file_content
+    );
 
-    let storage_credentials = StorageCredentials::access_key(account.clone(), access_key);
-    let blob_client =
-        ClientBuilder::new(account, storage_credentials).blob_client(&container, blob_name);
+    let request = CanisterHttpRequestArgument {
+        url: function_url,
+        method: HttpMethod::GET,
+        body: None,
+        headers: vec![],
+        max_response_bytes: None,
+        transform: None,
+    };
 
-    // Read file contents
-    let mut file = std::fs::File::open(file_name).unwrap();
-    let mut file_contents = Vec::new();
-    file.read_to_end(&mut file_contents).unwrap();
+    let (response,): (HttpResponse,) = call(
+        Principal::management_canister(),
+        "http_request",
+        (request,),
+    )
+    .await
+    .unwrap();
 
-    // Upload file content as a block blob
-    blob_client
-        .put_block_blob(file_contents)
-        .content_type("application/octet-stream")
-        .await
-        .unwrap();
-
-    ic_cdk::println!("File uploaded successfully.");
+    if response.status == candid::Nat::from(200 as usize) {
+        ic_cdk::println!("File uploaded successfully.");
+    } else {
+        ic_cdk::println!(
+            "Failed to upload file. Status: {}",
+            response.status
+        );
+    }
 }
