@@ -1,7 +1,7 @@
+use crate::{user::user_exists, utils::generate_hash_id, BADGES};
 use ic_cdk::query;
 use ic_sqlite::CONN;
 use serde::{Deserialize, Serialize};
-
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Badges {
     pub id: String,
@@ -40,4 +40,32 @@ pub fn get_user_badges(wallet_address: String) -> Result<String, String> {
     serde_json::to_string(&badges).map_err(|e| format!("{}", e))
 }
 
-// pub fn add_badge(sha256_src: )
+pub fn add_badge(lvl: u32, wallet_address: String) -> Result<(), String> {
+    if !user_exists(&wallet_address)? {
+        eprintln!(
+            "User with wallet address {} does not exist.",
+            wallet_address
+        );
+        return Err("User Not found".to_string());
+    }
+
+    let conn = CONN.lock().map_err(|x| format!("{}", x))?;
+    let img = {
+        match BADGES.with(|p| p.borrow().get(&lvl)) {
+            Some(s) => s.clone(),
+            None => {
+                todo!() // call some function that generates the new image and inserts it into the ref
+            }
+        }
+    };
+
+    let unique_id = generate_hash_id(&(wallet_address.clone() + &lvl.to_string()));
+    let _ = conn
+        .execute(
+            "INSERT INTO Badge (id, lvl, src, owner) VALUES ( $1 , $2 , $3 , $4 )",
+            [unique_id, lvl.to_string(), img, wallet_address],
+        )
+        .map_err(|err| format!("{}", err))?;
+
+    Ok(())
+}

@@ -2,6 +2,7 @@ type Result = variant { Ok; Err : text };
 type Result_1 = variant { Ok : text; Err : text };
 service : () -> {
   create_new_user : (text, opt text, opt text, opt text, opt text) -> (Result);
+  fetch_tasks : () -> (Result_1);
   get_all_users : () -> (text) query;
   get_user_badges : (text) -> (Result_1) query;
   get_user_data : (text) -> (Result_1) query;

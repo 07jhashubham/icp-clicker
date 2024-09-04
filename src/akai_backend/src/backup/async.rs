@@ -3,8 +3,14 @@ use base64::{engine::general_purpose, Engine};
 use candid::{Nat, Principal};
 use flate2::{write::GzEncoder, Compression};
 
-use ic_cdk::{api::management_canister::http_request::{CanisterHttpRequestArgument, HttpMethod, HttpResponse}, call};
+use ic_cdk::{
+    api::management_canister::http_request::{
+        CanisterHttpRequestArgument, HttpMethod, HttpResponse,
+    },
+    call,
+};
 use ic_sqlite::CONN;
+use lazy_static::lazy_static;
 use std::{
     env,
     io::{self, Read, Write},
@@ -12,7 +18,9 @@ use std::{
 
 use crate::utils::read_page_from_vfs;
 
-const CHUNK_SIZE: usize = 1024 * 1024; // 1 MB chunk size
+lazy_static! {
+    static ref CHUNK_SIZE: usize = env::var("BACKUP_CHUNK_SIZE").unwrap_or((1024 * 1024).to_string()).parse().unwrap_or(1024 * 1024); // 1 MB chunk size
+}
 pub async fn backup_chunked() {
     let account = env::var("STORAGE_ACCOUNT").expect("missing STORAGE_ACCOUNT");
     let access_key = env::var("STORAGE_ACCESS_KEY").expect("missing STORAGE_ACCESS_KEY");
@@ -23,7 +31,7 @@ pub async fn backup_chunked() {
 
     let mut reader = stream_and_compress_database().unwrap();
 
-    let mut buffer = vec![0; CHUNK_SIZE];
+    let mut buffer = vec![0; *CHUNK_SIZE];
     let mut part_number = 0;
 
     while let Result::Ok(bytes_read) = reader.read(&mut buffer) {

@@ -1,12 +1,14 @@
 use base64::{engine::general_purpose, Engine};
 use candid::{Nat, Principal};
 use flate2::{write::GzEncoder, Compression};
-use ic_cdk::{api::management_canister::http_request::{CanisterHttpRequestArgument, HttpHeader, HttpMethod, HttpResponse}, call};
-use ic_sqlite::CONN;
-use std::{
-    env,
-    io::Write,
+use ic_cdk::{
+    api::management_canister::http_request::{
+        CanisterHttpRequestArgument, HttpHeader, HttpMethod, HttpResponse,
+    },
+    call,
 };
+use ic_sqlite::CONN;
+use std::{env, io::Write};
 
 use crate::utils::read_page_from_vfs;
 
@@ -74,4 +76,3 @@ pub async fn backup() {
         ic_cdk::println!("Failed to upload file. Status: {}", response.status);
     }
 }
-

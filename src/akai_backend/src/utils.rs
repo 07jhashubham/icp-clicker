@@ -3,6 +3,9 @@ use std::io;
 use anyhow::{anyhow, Ok, Result};
 use ic_cdk::api::stable::{stable64_read, stable64_size};
 use ic_sqlite::CONN;
+use sha2::{Digest, Sha256};
+
+use crate::MAX_NUMBER_OF_LABELLINGS_PER_TASK;
 
 pub fn create_tables_if_not_exist() -> Result<()> {
     let tables = ["User", "Aliens", "Task", "Badges"];
@@ -21,7 +24,8 @@ pub fn create_tables_if_not_exist() -> Result<()> {
 
     if !table_exists {
         conn.execute_batch(
-            "
+            format!(
+                "
             BEGIN;
             PRAGMA foreign_keys = ON;
 
@@ -43,11 +47,12 @@ CREATE TABLE Aliens (
 -- Create Task table
 CREATE TABLE Task (
     id UUID PRIMARY KEY NOT NULL,
-    completed BOOLEAN DEFAULT FALSE,
+    completed_times INT DEFAULT 0 CHECK (completed_times <= {}),
     type TEXT CHECK(type IN ('AI', 'Social')),
     desc VARCHAR,
     data VARCHAR,
-    classes VARCHAR DEFAULT NULL
+    classes VARCHAR DEFAULT NULL,
+    occupancy INT DEFAULT 0 CHECK (occupancy <= {})
 );
 
 -- Create User table
@@ -59,13 +64,14 @@ CREATE TABLE User (
     twitter VARCHAR DEFAULT NULL,
     instagram VARCHAR,
     exp INT DEFAULT 0,
-    friends UUID REFERENCES User(wallet_address),
-    tasks UUID REFERENCES Task(id),
-    aliens INT REFERENCES Aliens(id)
+    rating INT DEFAULT 0
 );
 
             COMMIT;
             ",
+                *MAX_NUMBER_OF_LABELLINGS_PER_TASK, *MAX_NUMBER_OF_LABELLINGS_PER_TASK
+            )
+            .as_str(),
         )
         .map_err(|e| anyhow!("Failed to create tables: {}", e))?;
     }
@@ -88,4 +94,11 @@ fn read(buf: &mut [u8], offset: u64) -> Result<(), io::Error> {
         stable64_read(offset + 8, buf);
     }
     Result::Ok(())
+}
+
+pub fn generate_hash_id(data: &str) -> String {
+    let mut hasher = Sha256::new();
+    hasher.update(data);
+    let result = hasher.finalize();
+    format!("{:x}", result)
 }

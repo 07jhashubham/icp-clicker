@@ -1,5 +1,4 @@
 # TODO:
-- Instead of storing everything in memory, implement compression and uploading by streaming.
 - Consider using multithreading and sharding of the database to handle large files more efficiently.
 
 
