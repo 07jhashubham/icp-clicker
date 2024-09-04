@@ -41,6 +41,7 @@ dependencies = [
  "ic-cdk 0.13.5",
  "ic-cdk-timers",
  "ic-sqlite",
+ "ic-stable-structures",
  "lazy_static",
  "serde",
  "serde_json",
@@ -609,6 +610,15 @@ dependencies = [
  "lazy_static",
  "rusqlite-ic",
  "sqlite-vfs-ic",
+]
+
+[[package]]
+name = "ic-stable-structures"
+version = "0.6.5"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "03f3044466a69802de74e710dc0300b706a05696a0531c942ca856751a13b0db"
+dependencies = [
+ "ic_principal",
 ]
 
 [[package]]

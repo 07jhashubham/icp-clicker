@@ -1,14 +1,16 @@
 use std::{env, time::Duration};
 
+use backup::sync::backup;
 use futures::executor::block_on;
 use ic_cdk_timers::set_timer_interval;
 use lazy_static::lazy_static;
-use utils::{backup, create_tables_if_not_exist};
+use utils::create_tables_if_not_exist;
 
-pub mod aliens;
-pub mod badges;
-pub mod task;
-pub mod user;
+mod aliens;
+mod backup;
+mod badges;
+mod task;
+mod user;
 mod utils;
 lazy_static! {
     pub static ref COMMIT_BACKUPS: bool = {
@@ -18,7 +20,6 @@ lazy_static! {
             _ => false,
         }
     };
-
     pub static ref BACKUP_DURATION: u64 = {
         if *COMMIT_BACKUPS {
             env::var("BACKUP_DURATION")
