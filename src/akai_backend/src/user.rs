@@ -1,6 +1,6 @@
 use anyhow::Result;
 use ic_cdk::{query, update};
-use ic_sqlite::CONN;
+use ic_sqlite_features::{params, CONN};
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -40,22 +40,22 @@ pub fn create_new_user(
             exp,
             rating
         ) VALUES (
-            NULLIF($1, 'NULL'),    -- name
+            $1,    -- name
             $2,    -- wallet_address
             0,    -- clicks
-            NULLIF($5, 'NULL'),    -- email
-            NULLIF($6, 'NULL'),    -- twitter or NULL
-            NULLIF($7, 'NULL'),    -- instagram
+            $3,    -- email
+            $4,    -- twitter or NULL
+            $5,    -- instagram
             0,    -- exp
             0
         );
         ",
-            [
-                name.unwrap_or("NULL".to_string()),
+            params![
+                name,
                 wallet_address,
-                email.unwrap_or("NULL".to_string()),
-                twitter.unwrap_or("NULL".to_string()),
-                instagram.unwrap_or("NULL".to_string()),
+                email,
+                twitter,
+                instagram,
             ],
         )
         .map_err(|err| format!("{}", err))?;
@@ -72,7 +72,7 @@ fn update_user_field(wallet_address: String, field: &str, value: String) -> Resu
     let _ = CONN
         .lock()
         .map_err(|err| format!("{}", err))?
-        .execute(&query, [value, wallet_address])
+        .execute(&query, params![value, wallet_address])
         .map_err(|err| format!("{}", err))?;
 
     Ok(())

@@ -1,6 +1,6 @@
 use crate::{user::user_exists, utils::generate_hash_id, BADGES};
 use ic_cdk::query;
-use ic_sqlite::CONN;
+use ic_sqlite_features::{params, CONN};
 use serde::{Deserialize, Serialize};
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Badges {
@@ -18,13 +18,13 @@ pub fn get_user_badges(wallet_address: String) -> Result<String, String> {
         SELECT Badges.id, Badges.src, Badges.lvl
         FROM Badges
         INNER JOIN User ON Badges.owner = User.wallet_address
-        WHERE User.wallet_address = ?
+        WHERE User.wallet_address = ?1
         ",
         )
         .map_err(|e| format!("{}", e))?;
 
     let badge_iter = stmt
-        .query_map([wallet_address], |row| {
+        .query_map(params![wallet_address], |row| {
             Ok(Badges {
                 id: row.get(0)?,
                 src: row.get(1)?,
@@ -39,7 +39,7 @@ pub fn get_user_badges(wallet_address: String) -> Result<String, String> {
 
     serde_json::to_string(&badges).map_err(|e| format!("{}", e))
 }
-
+#[allow(dead_code)]
 pub fn add_badge(lvl: u32, wallet_address: String) -> Result<(), String> {
     if !user_exists(&wallet_address)? {
         eprintln!(
@@ -63,7 +63,7 @@ pub fn add_badge(lvl: u32, wallet_address: String) -> Result<(), String> {
     let _ = conn
         .execute(
             "INSERT INTO Badge (id, lvl, src, owner) VALUES ( $1 , $2 , $3 , $4 )",
-            [unique_id, lvl.to_string(), img, wallet_address],
+            params![unique_id, lvl, img, wallet_address],
         )
         .map_err(|err| format!("{}", err))?;
 

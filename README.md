@@ -2,14 +2,17 @@
 - Consider using multithreading and sharding of the database to handle large files more efficiently.
 
 
-# Serialization and Deserialization Process
+## ic-sqlite-features
 
-Serialization and deserialization are performed using the following steps:
+`ic-sqlite-features` is our custom fork of `ic-sqlite`, designed to re-export all `rusqlite` components without any dependency conflicts and to include additional standalone features, such as database backup streaming. This fork is specifically optimized to work within ICP WASM Environment by leveraging VFS.
 
-1. Generate the Database as Bytes
-2. Compress it using `flate2` and `gzip`
-3. Base64 Encode the Compressed Data
+To integrate `ic-sqlite-features` into your project, you can use Cargo with the following command:
 
+```bash
+cargo add ic-sqlite-features
+```
+
+Project Link: https://github.com/JoeruCodes/ic-sqlite
 
 # Generating candids
 Run `generate.sh` to generate candids for frontend definitions. 

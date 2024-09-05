@@ -12,11 +12,12 @@ crate-type = ["cdylib"]
 anyhow = "1.0.86"
 base64 = "0.22.1"
 candid = "0.10"
+dotenv = "0.15.0"
 flate2 = "1.0.33"
 futures = "0.3.30"
 ic-cdk = "0.13"
 ic-cdk-timers = "0.7" # Feel free to remove this dependency if you don't need timers
-ic-sqlite = "0.1.0"
+ic-sqlite-features = "0.1.1"
 ic-stable-structures = "0.6.5"
 lazy_static = "1.5.0"
 serde = { version = "1.0.209", features = ["derive"] }

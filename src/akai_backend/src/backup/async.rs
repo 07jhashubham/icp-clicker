@@ -9,7 +9,7 @@ use ic_cdk::{
     },
     call,
 };
-use ic_sqlite::CONN;
+use ic_sqlite_features::CONN;
 use lazy_static::lazy_static;
 use std::{
     env,
@@ -21,6 +21,7 @@ use crate::utils::read_page_from_vfs;
 lazy_static! {
     static ref CHUNK_SIZE: usize = env::var("BACKUP_CHUNK_SIZE").unwrap_or((1024 * 1024).to_string()).parse().unwrap_or(1024 * 1024); // 1 MB chunk size
 }
+#[allow(dead_code)]
 pub async fn backup_chunked() {
     let account = env::var("STORAGE_ACCOUNT").expect("missing STORAGE_ACCOUNT");
     let access_key = env::var("STORAGE_ACCESS_KEY").expect("missing STORAGE_ACCESS_KEY");
@@ -30,7 +31,6 @@ pub async fn backup_chunked() {
         env::var("AZURE_BACKUP_FUNCTION_URL").unwrap_or("your-function-url".to_string());
 
     let mut reader = stream_and_compress_database().unwrap();
-
     let mut buffer = vec![0; *CHUNK_SIZE];
     let mut part_number = 0;
 

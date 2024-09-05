@@ -36,11 +36,12 @@ dependencies = [
  "anyhow",
  "base64",
  "candid 0.10.10",
+ "dotenv",
  "flate2",
  "futures",
  "ic-cdk 0.13.5",
  "ic-cdk-timers",
- "ic-sqlite",
+ "ic-sqlite-features",
  "ic-stable-structures",
  "lazy_static",
  "serde",
@@ -337,6 +338,12 @@ dependencies = [
 ]
 
 [[package]]
+name = "dotenv"
+version = "0.15.0"
+source = "registry+https://github.com/rust-lang/crates.io-index"
+checksum = "77c90badedccf4105eca100756a0b1289e191f6fcbdadd3cee1d2f614f97da8f"
+
+[[package]]
 name = "either"
 version = "1.13.0"
 source = "registry+https://github.com/rust-lang/crates.io-index"
@@ -602,10 +609,10 @@ dependencies = [
 ]
 
 [[package]]
-name = "ic-sqlite"
-version = "0.1.0"
+name = "ic-sqlite-features"
+version = "0.1.1"
 source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "66edea256208f122873e22d69b49edb6f61f657628dbfcbd075f93e3ad3754b8"
+checksum = "fe4653d15b73c189b908abcee8e81ef4996337c4d952db62b48940647e15076e"
 dependencies = [
  "ic-cdk 0.6.10",
  "lazy_static",

@@ -9,7 +9,7 @@ use ic_stable_structures::{
 };
 use lazy_static::lazy_static;
 use utils::create_tables_if_not_exist;
-
+use dotenv::dotenv;
 mod aliens;
 mod backup;
 mod badges;
@@ -57,6 +57,7 @@ thread_local! {
 }
 #[ic_cdk::init]
 fn init() {
+    dotenv().ok();
     create_tables_if_not_exist().unwrap();
 
     if *COMMIT_BACKUPS && *BACKUP_DURATION > 0 {

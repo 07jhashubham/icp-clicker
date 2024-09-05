@@ -1,7 +1,7 @@
 use std::{cmp::min, env};
 
 use ic_cdk::update;
-use ic_sqlite::CONN;
+use ic_sqlite_features::{params, CONN};
 use serde::{Deserialize, Serialize};
 
 use crate::MAX_NUMBER_OF_LABELLINGS_PER_TASK;
@@ -37,7 +37,7 @@ fn get_all_tasks() -> Result<Vec<Task>, String> {
         .map_err(|e| format!("{}", e))?;
 
     let task_iter = stmt
-        .query_map([max_labellings], |row| {
+        .query_map(params![max_labellings], |row| {
             Ok(Task {
                 id: row.get(0)?,
                 completed_times: row.get(1)?,
@@ -86,14 +86,40 @@ pub fn fetch_tasks() -> Result<String, String>{
 
 fn commit_tasks(tasks: &[Task]) -> Result<(), String> {
     let conn = CONN.lock().map_err(|e| format!("{}", e))?;
+
+    let ids: Vec<_> = tasks.iter().map(|task| task.id.clone()).collect();
     
-    for task in tasks {
-        conn.execute(
-            "UPDATE Task SET occupancy = occupancy + 1 WHERE id = ?1",
-            [&task.id],
-        ).map_err(|e| format!("{}", e))?;
-    }
+    let placeholders = (1..=ids.len())
+        .map(|i| format!("?{}", i))
+        .collect::<Vec<_>>()
+        .join(", ");
+
+    let query = format!(
+        "UPDATE Task SET occupancy = occupancy + 1 WHERE id IN ({})",
+        placeholders
+    );
+
+    let params: Vec<&dyn ic_sqlite_features::ToSql> = ids.iter().map(|id| id as &dyn ic_sqlite_features::ToSql).collect();
+
+    conn.execute(&query, &*params).map_err(|e| format!("{}", e))?;
 
     Ok(())
 }
 
+
+pub fn clear_tasks_occupancy(t_ids: &[String]) -> Result<(), String> {
+    let conn = CONN.lock().map_err(|e| format!("{}", e))?;
+
+    let placeholders = t_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
+
+    let query = format!(
+        "UPDATE Task SET occupancy = occupancy - 1 WHERE id IN ({})",
+        placeholders
+    );
+
+    let params: Vec<&dyn ic_sqlite_features::ToSql> = t_ids.iter().map(|id| id as &dyn ic_sqlite_features::ToSql).collect();
+    
+    conn.execute(&query, &*params).map_err(|e| format!("{}", e))?;
+
+    Ok(())
+}

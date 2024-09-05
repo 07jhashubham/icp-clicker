@@ -7,11 +7,12 @@ use ic_cdk::{
     },
     call,
 };
-use ic_sqlite::CONN;
+use ic_sqlite_features::CONN;
 use std::{env, io::Write};
 
 use crate::utils::read_page_from_vfs;
 
+#[ic_cdk::query]
 fn dump_and_compress_database() -> Vec<u8> {
     let mut conn = CONN.lock().unwrap();
     let mut output = Vec::new();

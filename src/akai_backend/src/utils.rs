@@ -2,7 +2,7 @@ use std::io;
 
 use anyhow::{anyhow, Ok, Result};
 use ic_cdk::api::stable::{stable64_read, stable64_size};
-use ic_sqlite::CONN;
+use ic_sqlite_features::CONN;
 use sha2::{Digest, Sha256};
 
 use crate::MAX_NUMBER_OF_LABELLINGS_PER_TASK;
@@ -27,7 +27,7 @@ pub fn create_tables_if_not_exist() -> Result<()> {
             format!(
                 "
             BEGIN;
-            PRAGMA foreign_keys = ON;
+PRAGMA foreign_keys = ON;
 
 -- Create Badges table
 CREATE TABLE Badges (
@@ -53,6 +53,16 @@ CREATE TABLE Task (
     data VARCHAR,
     classes VARCHAR DEFAULT NULL,
     occupancy INT DEFAULT 0 CHECK (occupancy <= {})
+);
+
+-- Create task_logs table
+CREATE TABLE Task_logs (
+    log_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    task_id UUID NOT NULL,
+    datetime TEXT NOT NULL,
+    completed_by TEXT,
+    FOREIGN KEY (task_id) REFERENCES Task(id),
+    FOREIGN KEY (completed_by) REFERENCES User(wallet_address)
 );
 
 -- Create User table
