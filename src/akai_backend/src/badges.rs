@@ -1,3 +1,7 @@
+// ================================================================================================================================================================================
+// >>>>>>>>>>>>>>>>>>>>>>>>>>>> Note: Badges might be replaced by nfts <<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<
+// ================================================================================================================================================================================
+
 use crate::{user::user_exists, utils::generate_hash_id, BADGES};
 use ic_cdk::query;
 use ic_sqlite_features::{params, CONN};
@@ -49,7 +53,7 @@ pub fn add_badge(lvl: u32, wallet_address: String) -> Result<(), String> {
         return Err("User Not found".to_string());
     }
 
-    let conn = CONN.lock().map_err(|x| format!("{}", x))?;
+    let mut conn = CONN.lock().map_err(|x| format!("{}", x))?;
     let img = {
         match BADGES.with(|p| p.borrow().get(&lvl)) {
             Some(s) => s.clone(),
@@ -60,12 +64,15 @@ pub fn add_badge(lvl: u32, wallet_address: String) -> Result<(), String> {
     };
 
     let unique_id = generate_hash_id(&(wallet_address.clone() + &lvl.to_string()));
-    let _ = conn
+
+    let tx = conn.transaction().map_err(|e| format!("{}", e))?;
+    let _ = tx
         .execute(
-            "INSERT INTO Badge (id, lvl, src, owner) VALUES ( $1 , $2 , $3 , $4 )",
+            "INSERT INTO Badge (id, lvl, src, owner) VALUES ( ?1 , ?2 , ?3 , ?4 )",
             params![unique_id, lvl, img, wallet_address],
         )
         .map_err(|err| format!("{}", err))?;
 
+    tx.commit().map_err(|e| format!("{}", e))?;
     Ok(())
 }

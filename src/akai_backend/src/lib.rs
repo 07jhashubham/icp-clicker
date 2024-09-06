@@ -63,7 +63,6 @@ fn init() {
     if *COMMIT_BACKUPS && *BACKUP_DURATION > 0 {
         set_timer_interval(Duration::from_secs(*BACKUP_DURATION), || block_on(backup()));
     }
-
     ic_cdk::println!("Initialization Complete!");
 }
 ic_cdk::export_candid!();

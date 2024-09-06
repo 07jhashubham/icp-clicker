@@ -1,4 +1,4 @@
-use std::io;
+use std::{io, time::{SystemTime, UNIX_EPOCH}};
 
 use anyhow::{anyhow, Ok, Result};
 use ic_cdk::api::stable::{stable64_read, stable64_size};
@@ -29,7 +29,8 @@ pub fn create_tables_if_not_exist() -> Result<()> {
             BEGIN;
 PRAGMA foreign_keys = ON;
 
--- Create Badges table
+-- Create Badges table 
+-- Might be replaced by nfts soon
 CREATE TABLE Badges (
     id UUID PRIMARY KEY UNIQUE NOT NULL,
     src VARCHAR,
@@ -57,7 +58,7 @@ CREATE TABLE Task (
 
 -- Create task_logs table
 CREATE TABLE Task_logs (
-    log_id INTEGER PRIMARY KEY AUTOINCREMENT,
+    log_id UUID PRIMARY KEY NOT NULL,
     task_id UUID NOT NULL,
     datetime TEXT NOT NULL,
     completed_by TEXT,
