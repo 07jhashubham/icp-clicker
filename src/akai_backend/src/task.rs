@@ -1,10 +1,14 @@
-use std::env;
+use std::{collections::HashMap, env};
 
 use ic_cdk::update;
 use ic_sqlite_features::{params, CONN};
 use serde::{Deserialize, Serialize};
 
-use crate::{utils::generate_hash_id, MAX_NUMBER_OF_LABELLINGS_PER_TASK};
+use crate::{
+    user::{update_exp, update_rating},
+    utils::generate_hash_id,
+    MAX_NUMBER_OF_LABELLINGS_PER_TASK,
+};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Task {
@@ -39,7 +43,7 @@ fn fetch_and_commit_tasks() -> Result<String, String> {
 
     let tasks: Vec<Task> = {
         let mut stmt = tx
-            .prepare(
+            .prepare_cached(
                 "WITH SelectedTasks AS (
                 SELECT id, completed_times, type, desc, data, classes, occupancy
                 FROM Task
@@ -115,10 +119,10 @@ pub fn clear_tasks_occupancy(t_ids: &[String]) -> Result<(), String> {
 }
 
 #[update]
-pub fn complete_tasks(
+pub fn complete_task(
     t_id: String,
     wallet_address: String,
-    date_time: String,
+    image_link: String,
 ) -> Result<(), String> {
     let mut conn = CONN.lock().map_err(|e| format!("{}", e))?;
 
@@ -132,13 +136,91 @@ pub fn complete_tasks(
     let logger_id = generate_hash_id(&(t_id + &wallet_address));
     tx.execute(
         "UPDATE Task_logs
-         SET datetime = ?1, completed_by = ?2
+         SET image_link = ?1, completed_by = ?2
          WHERE id = ?3",
-        params![date_time, wallet_address, logger_id],
+        params![image_link, wallet_address, logger_id],
     )
     .map_err(|e| format!("{}", e))?;
+
+    update_exp(wallet_address, 100, &tx)?; // give 100 exp on completion of a task
     tx.commit()
         .map_err(|e| format!("Transaction commit failed: {}", e))?;
 
     Ok(())
 }
+
+pub async fn settle_tasks() -> Result<(), String> {
+    let mut conn = CONN.lock().map_err(|e| e.to_string())?;
+
+    let tx = conn.transaction().map_err(|e| e.to_string())?;
+
+    {
+        let mut stmt = tx
+            .prepare_cached(
+                "SELECT t.id, l.completed_by, l.image_link
+                FROM Task t
+                JOIN Task_logs l ON t.id = l.task_id
+                WHERE t.completed_times = ?1",
+            )
+            .map_err(|e| e.to_string())?;
+
+        let rows = stmt
+            .query_map(params![*MAX_NUMBER_OF_LABELLINGS_PER_TASK], |row| {
+                Ok((
+                    row.get::<_, String>(0)?, // Task ID
+                    row.get::<_, String>(1)?, // Completed By (user)
+                    row.get::<_, String>(2)?, // Image Link
+                ))
+            })
+            .map_err(|e| e.to_string())?;
+
+        let mut group_by_id: HashMap<String, Vec<(String, String)>> = HashMap::new(); // task_id -> (image_link, user)
+
+        for r in rows {
+            let (task_id, user, image_link): (String, String, String) =
+                r.map_err(|e| e.to_string())?;
+            group_by_id
+                .entry(task_id)
+                .or_insert_with(Vec::new)
+                .push((image_link, user));
+        }
+
+        let mut del_stmt = tx
+            .prepare_cached(
+                "
+            DELETE FROM Task_logs WHERE task_id = ?1;
+            DELETE FROM Task WHERE id = ?1;
+                ",
+            )
+            .map_err(|e| e.to_string())?;
+
+        for (id, v) in group_by_id {
+            let rating = fetch_images_determine_rating_increment(&v).await?;
+
+            if v.len() == rating.len() {
+                return Err("Something went wrong DEVS CHEKCK".to_string());
+            };
+
+            for (user, increment) in rating {
+                update_rating(user, increment, &tx)?;
+            }
+
+            del_stmt.execute(params![id]).map_err(|e| e.to_string())?;
+        }
+    }
+
+    tx.commit().map_err(|e| e.to_string())?;
+
+    Ok(())
+}
+
+// (image_links, wallet_address) -> (wallet_address, increment)
+async fn fetch_images_determine_rating_increment(
+    image_vec: &Vec<(String, String)>,
+) -> Result<Vec<(String, usize)>, String> {
+    Ok(image_vec
+        .iter()
+        .map(|(_, user)| (user.to_owned(), 1))
+        .collect())
+}
+// placeholder

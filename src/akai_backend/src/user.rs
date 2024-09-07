@@ -100,12 +100,12 @@ pub fn update_name(wallet_address: String, name: Option<String>) -> Result<(), S
     update_user_field(wallet_address, "name", name)
 }
 
-fn increment_field(wallet_address: String, field: &str, amt: usize) -> Result<(), String> {
-    let mut conn = CONN.lock().map_err(|err| format!("{}", err))?;
-
-    let tx = conn
-        .transaction()
-        .map_err(|e| format!("Transaction start failed: {}", e))?;
+fn increment_field(
+    wallet_address: String,
+    field: &str,
+    amt: usize,
+    tx: &ic_sqlite_features::Transaction<'_>,
+) -> Result<(), String> {
     let query = format!(
         "UPDATE User SET {} = {} + {} WHERE wallet_address = ?1 ;",
         field, field, amt
@@ -113,19 +113,30 @@ fn increment_field(wallet_address: String, field: &str, amt: usize) -> Result<()
     tx.execute(&query, params![wallet_address])
         .map_err(|err| format!("{}", err))?;
 
-    tx.commit().map_err(|e| format!("{}", e))?;
     Ok(())
 }
 
-pub(crate) fn update_clicks(wallet_address: String, amt: usize) -> Result<(), String> {
-    increment_field(wallet_address, "clicks", amt)
+pub(crate) fn update_clicks(
+    wallet_address: String,
+    amt: usize,
+    tx: &ic_sqlite_features::Transaction<'_>,
+) -> Result<(), String> {
+    increment_field(wallet_address, "clicks", amt, tx)
 }
-pub(crate) fn update_exp(wallet_address: String, amt: usize) -> Result<(), String> {
-    increment_field(wallet_address, "exp", amt)
+pub(crate) fn update_exp(
+    wallet_address: String,
+    amt: usize,
+    tx: &ic_sqlite_features::Transaction<'_>,
+) -> Result<(), String> {
+    increment_field(wallet_address, "exp", amt, tx)
 }
 
-pub(crate) fn update_rating(wallet_address: String, amt: usize) -> Result<(), String> {
-    increment_field(wallet_address, "rating", amt)
+pub(crate) fn update_rating(
+    wallet_address: String,
+    amt: usize,
+    tx: &ic_sqlite_features::Transaction<'_>,
+) -> Result<(), String> {
+    increment_field(wallet_address, "rating", amt, tx)
 }
 #[query]
 pub fn get_all_users() -> String {

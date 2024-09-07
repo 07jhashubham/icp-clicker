@@ -9,6 +9,7 @@ use ic_stable_structures::{
     DefaultMemoryImpl, StableBTreeMap,
 };
 use lazy_static::lazy_static;
+use task::settle_tasks;
 use utils::create_tables_if_not_exist;
 mod aliens;
 mod backup;
@@ -63,6 +64,13 @@ fn init() {
     if *COMMIT_BACKUPS && *BACKUP_DURATION > 0 {
         set_timer_interval(Duration::from_secs(*BACKUP_DURATION), || spawn(backup()));
     }
+
+    set_timer_interval(Duration::from_secs(10), || {
+        let future = settle_tasks(); // this creates a future
+        futures::executor::block_on(future).unwrap(); // blocks on the future
+    });
+
+    
     ic_cdk::println!("Initialization Complete!");
 }
 

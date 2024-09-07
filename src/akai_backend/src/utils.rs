@@ -35,51 +35,52 @@ pub fn create_tables_if_not_exist() -> Result<()> {
         conn.execute_batch(
             format!(
                 "
-            BEGIN;
-PRAGMA foreign_keys = ON;
+                BEGIN;
+                PRAGMA foreign_keys = ON;
 
--- Create Aliens table
-CREATE TABLE Aliens (
-    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
-    lvl INT NOT NULL,
-    owner VARCHAR NOT NULL,
-    FOREIGN KEY (owner) REFERENCES User(wallet_address)
-);
+                -- Create Aliens table
+                CREATE TABLE Aliens (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    lvl INT NOT NULL,
+                    owner VARCHAR NOT NULL,
+                    FOREIGN KEY (owner) REFERENCES User(wallet_address)
+                );
 
--- Create Task table
-CREATE TABLE Task (
-    id UUID PRIMARY KEY NOT NULL,
-    completed_times INT DEFAULT 0 CHECK (completed_times <= {}),
-    type TEXT CHECK(type IN ('AI', 'Social')),
-    desc VARCHAR,
-    data VARCHAR,
-    classes VARCHAR DEFAULT NULL,
-    occupancy INT DEFAULT 0 CHECK (occupancy <= {})
-);
+                -- Create Task table
+                CREATE TABLE Task (
+                    id UUID PRIMARY KEY NOT NULL,
+                    completed_times INT DEFAULT 0 CHECK (completed_times <= {}),
+                    type TEXT CHECK(type IN ('AI', 'Social')),
+                    desc VARCHAR,
+                    data VARCHAR,
+                    classes VARCHAR DEFAULT NULL,
+                    occupancy INT DEFAULT 0 CHECK (occupancy <= {})
+                );
 
--- Create task_logs table
-CREATE TABLE Task_logs (
-    id UUID PRIMARY KEY NOT NULL,
-    task_id UUID NOT NULL,
-    datetime TEXT NOT NULL,
-    completed_by VARCHAR,
-    FOREIGN KEY (task_id) REFERENCES Task(id),
-    FOREIGN KEY (completed_by) REFERENCES User(wallet_address)
-);
+                -- Create Task_logs table
+                CREATE TABLE Task_logs (
+                    id UUID PRIMARY KEY NOT NULL,
+                    task_id UUID NOT NULL,
+                    datetime TEXT NOT NULL,
+                    completed_by VARCHAR,
+                    image_link VARCHAR,
+                    FOREIGN KEY (task_id) REFERENCES Task(id),
+                    FOREIGN KEY (completed_by) REFERENCES User(wallet_address)
+                );
 
--- Create User table
-CREATE TABLE User (
-    name VARCHAR,
-    wallet_address VARCHAR PRIMARY KEY UNIQUE NOT NULL,
-    clicks INT DEFAULT 0 NOT NULL,
-    email VARCHAR,
-    twitter VARCHAR DEFAULT NULL,
-    instagram VARCHAR,
-    exp INT DEFAULT 0,
-    rating INT DEFAULT 0
-);
+                -- Create User table
+                CREATE TABLE User (
+                    name VARCHAR,
+                    wallet_address VARCHAR PRIMARY KEY UNIQUE NOT NULL,
+                    clicks INT DEFAULT 0 NOT NULL,
+                    email VARCHAR,
+                    twitter VARCHAR DEFAULT NULL,
+                    instagram VARCHAR,
+                    exp INT DEFAULT 0,
+                    rating INT DEFAULT 0
+                );
 
-            COMMIT;
+                COMMIT;
             ",
                 *MAX_NUMBER_OF_LABELLINGS_PER_TASK, *MAX_NUMBER_OF_LABELLINGS_PER_TASK
             )

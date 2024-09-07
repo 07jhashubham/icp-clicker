@@ -74,7 +74,7 @@ pub fn spawn_aliens(wallet_address: String, slots: usize) -> Result<String, Stri
 }
 
 fn get_random_alien() -> Result<usize, String> {
-    return Ok(generate()? % 5usize  + 1); // basically gets any number from 1 to 5 levels
+    return Ok(generate()? % 5usize + 1); // basically gets any number from 1 to 5 levels
 }
 
 // Note: lhs alien persists while the rhs alien gets deleted, MUST simulate the same in the frontend
