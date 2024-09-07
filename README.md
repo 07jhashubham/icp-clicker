@@ -1,3 +1,9 @@
+# AKAI SPACE
+Contains the necessary documentation for seamless audits and bug fixing
+
+## Task Settlement Logic
+![image](https://github.com/user-attachments/assets/203cabd1-173c-4ff6-af3d-61cc56985a8e)
+
 ## ic-sqlite-features
 
 `ic-sqlite-features` is our custom fork of `ic-sqlite`, designed to re-export all `rusqlite` components without any dependency conflicts and to include additional standalone features, such as database backup streaming. This fork is specifically optimized to work within ICP WASM Environment by leveraging VFS.
