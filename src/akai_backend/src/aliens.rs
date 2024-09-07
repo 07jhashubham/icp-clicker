@@ -1,7 +1,7 @@
 use std::ops::Add;
 
 use ic_cdk::update;
-use ic_rand::rng::RandomNumberGenerator;
+use ic_rand::true_rng::generate;
 use ic_sqlite_features::{params, CONN};
 use serde::{Deserialize, Serialize};
 use serde_json::json;
@@ -74,7 +74,7 @@ pub fn spawn_aliens(wallet_address: String, slots: usize) -> Result<String, Stri
 }
 
 fn get_random_alien() -> Result<usize, String> {
-    return Ok((RandomNumberGenerator::<usize>::new().next() % 5) + 1); // basically gets any number from 1 to 5 levels
+    return Ok(generate()? % 5usize  + 1); // basically gets any number from 1 to 5 levels
 }
 
 // Note: lhs alien persists while the rhs alien gets deleted, MUST simulate the same in the frontend

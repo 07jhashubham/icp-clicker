@@ -8,6 +8,7 @@ service : () -> {
     );
   dump_and_compress_database : () -> (blob) query;
   fetch_and_commit_tasks : () -> (Result);
+  foo : () -> (nat64);
   get_all_users : () -> (text) query;
   get_user_data : (text) -> (Result) query;
   spawn_aliens : (text, nat64) -> (Result);

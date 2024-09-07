@@ -65,4 +65,5 @@ fn init() {
     }
     ic_cdk::println!("Initialization Complete!");
 }
+
 ic_cdk::export_candid!();
