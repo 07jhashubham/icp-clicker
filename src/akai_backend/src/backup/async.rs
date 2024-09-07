@@ -16,7 +16,8 @@ use std::{
     io::{self, Read, Write},
 };
 
-use crate::utils::read_page_from_vfs;
+use crate::db::utils::read_page_from_vfs;
+
 
 lazy_static! {
     static ref CHUNK_SIZE: usize = env::var("BACKUP_CHUNK_SIZE").unwrap_or((1024 * 1024).to_string()).parse().unwrap_or(1024 * 1024); // 1 MB chunk size

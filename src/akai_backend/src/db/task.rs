@@ -5,10 +5,10 @@ use ic_sqlite_features::{params, CONN};
 use serde::{Deserialize, Serialize};
 
 use crate::{
-    user::{update_exp, update_rating},
-    utils::generate_hash_id,
     MAX_NUMBER_OF_LABELLINGS_PER_TASK,
 };
+
+use super::{user::{update_exp, update_rating}, utils::generate_hash_id};
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Task {
