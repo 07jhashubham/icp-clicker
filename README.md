@@ -1,7 +1,3 @@
-# TODO:
-- Consider using multithreading and sharding of the database to handle large files more efficiently.
-
-
 ## ic-sqlite-features
 
 `ic-sqlite-features` is our custom fork of `ic-sqlite`, designed to re-export all `rusqlite` components without any dependency conflicts and to include additional standalone features, such as database backup streaming. This fork is specifically optimized to work within ICP WASM Environment by leveraging VFS.
@@ -13,6 +9,21 @@ cargo add ic-sqlite-features
 ```
 
 Project Link: https://github.com/JoeruCodes/ic-sqlite
+
+
+## ic-rand
+
+`ic-rand` is a custom random number generator designed for use within the ICP WASM environment. This implementation is based on the Linear Congruential Generator (LCG) algorithm and supports configurable parameters to suit various use cases. The crate is optimized for deterministic random number generation, ensuring compatibility with both standard and constrained environments like Internet Computer (ICP).
+
+It provides flexible support for different integer types through Rust generics, making it adaptable for various applications requiring randomness in distributed systems. This crate ensures minimal dependency conflicts while maintaining full compatibility with the `icp` ecosystem.
+
+To integrate `ic-rand` into your project, you can use Cargo with the following command:
+
+```bash
+cargo add ic-rand
+```
+
+Project Link: https://github.com/JoeruCodes/ic-rand
 
 # Generating candids
 Run `generate.sh` to generate candids for frontend definitions. 

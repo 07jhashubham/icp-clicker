@@ -12,7 +12,7 @@ pub struct User {
     pub twitter: Option<String>,
     pub instagram: Option<String>,
     pub exp: usize,
-    pub rating: usize
+    pub rating: usize,
 }
 
 #[update]
@@ -51,13 +51,7 @@ pub fn create_new_user(
             0
         );
         ",
-            params![
-                name,
-                wallet_address,
-                email,
-                twitter,
-                instagram,
-            ],
+            params![name, wallet_address, email, twitter, instagram,],
         )
         .map_err(|err| format!("{}", err))?;
 
@@ -65,21 +59,20 @@ pub fn create_new_user(
     Ok(())
 }
 
-fn update_user_field<T>(wallet_address: String, field: &str, value: T) -> Result<(), String> 
-    where T: ToSql
+fn update_user_field<T>(wallet_address: String, field: &str, value: T) -> Result<(), String>
+where
+    T: ToSql,
 {
     // if !user_exists(&wallet_address)? {
     //     return Err(format!("User doesnt exist for wallet {}", wallet_address));
     // }
     let query = format!("UPDATE User SET {} = ?1 WHERE wallet_address = ?2;", field);
 
-    let mut conn = CONN
-        .lock()
-        .map_err(|err| format!("{}", err))?;
+    let mut conn = CONN.lock().map_err(|err| format!("{}", err))?;
 
     let tx = conn.transaction().map_err(|e| format!("{}", e))?;
 
-       tx .execute(&query, params![value, wallet_address])
+    tx.execute(&query, params![value, wallet_address])
         .map_err(|err| format!("{}", err))?;
 
     tx.commit().map_err(|e| format!("{}", e))?;
@@ -103,30 +96,35 @@ pub fn update_instagram(wallet_address: String, instagram: String) -> Result<(),
 }
 
 #[update]
-pub fn update_name(wallet_address: String, name: Option<String>) -> Result<(), String>{
+pub fn update_name(wallet_address: String, name: Option<String>) -> Result<(), String> {
     update_user_field(wallet_address, "name", name)
 }
 
-fn increment_field(wallet_address: String, field: &str, amt: usize) -> Result<(), String>{
-
+fn increment_field(wallet_address: String, field: &str, amt: usize) -> Result<(), String> {
     let mut conn = CONN.lock().map_err(|err| format!("{}", err))?;
-    
-    let tx = conn.transaction().map_err(|e| format!("Transaction start failed: {}", e))?;
-    let query = format!("UPDATE User SET {} = {} + {} WHERE wallet_address = ?1 ;", field, field, amt);
-    tx.execute(&query, params![wallet_address]).map_err(|err| format!("{}", err))?;
+
+    let tx = conn
+        .transaction()
+        .map_err(|e| format!("Transaction start failed: {}", e))?;
+    let query = format!(
+        "UPDATE User SET {} = {} + {} WHERE wallet_address = ?1 ;",
+        field, field, amt
+    );
+    tx.execute(&query, params![wallet_address])
+        .map_err(|err| format!("{}", err))?;
 
     tx.commit().map_err(|e| format!("{}", e))?;
     Ok(())
 }
 
-pub (crate) fn update_clicks(wallet_address: String, amt: usize) -> Result<(), String>{
+pub(crate) fn update_clicks(wallet_address: String, amt: usize) -> Result<(), String> {
     increment_field(wallet_address, "clicks", amt)
 }
-pub(crate) fn update_exp(wallet_address: String, amt: usize) -> Result<(), String>{
+pub(crate) fn update_exp(wallet_address: String, amt: usize) -> Result<(), String> {
     increment_field(wallet_address, "exp", amt)
 }
 
-pub(crate) fn update_rating(wallet_address: String, amt: usize) -> Result<(), String>{
+pub(crate) fn update_rating(wallet_address: String, amt: usize) -> Result<(), String> {
     increment_field(wallet_address, "rating", amt)
 }
 #[query]
@@ -134,7 +132,7 @@ pub fn get_all_users() -> String {
     let conn = CONN.lock().unwrap();
     let mut stmt = conn
         .prepare(
-            "SELECT name, wallet_address, clicks, email, twitter, instagram, exp, rating FROM User"
+            "SELECT name, wallet_address, clicks, email, twitter, instagram, exp, rating FROM User",
         )
         .unwrap();
 
@@ -148,7 +146,7 @@ pub fn get_all_users() -> String {
                 twitter: row.get(4).ok(),
                 instagram: row.get(5).ok(),
                 exp: row.get(6).unwrap(),
-                rating: row.get(7).unwrap()
+                rating: row.get(7).unwrap(),
             })
         })
         .unwrap();

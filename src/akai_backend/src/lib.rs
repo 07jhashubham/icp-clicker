@@ -1,7 +1,8 @@
 use std::{cell::RefCell, env, time::Duration};
 
 use backup::sync::backup;
-use futures::executor::block_on;
+use dotenv::dotenv;
+use ic_cdk::spawn;
 use ic_cdk_timers::set_timer_interval;
 use ic_stable_structures::{
     memory_manager::{MemoryId, MemoryManager, VirtualMemory},
@@ -9,7 +10,6 @@ use ic_stable_structures::{
 };
 use lazy_static::lazy_static;
 use utils::create_tables_if_not_exist;
-use dotenv::dotenv;
 mod aliens;
 mod backup;
 mod badges;
@@ -61,7 +61,7 @@ fn init() {
     create_tables_if_not_exist().unwrap();
 
     if *COMMIT_BACKUPS && *BACKUP_DURATION > 0 {
-        set_timer_interval(Duration::from_secs(*BACKUP_DURATION), || block_on(backup()));
+        set_timer_interval(Duration::from_secs(*BACKUP_DURATION), || spawn(backup()));
     }
     ic_cdk::println!("Initialization Complete!");
 }

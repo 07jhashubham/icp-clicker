@@ -1,7 +1,7 @@
-use std::{io, time::{SystemTime, UNIX_EPOCH}};
+use std::io;
 
 use anyhow::{anyhow, Ok, Result};
-use ic_cdk::api::stable::{stable64_read, stable64_size};
+use ic_cdk::api::stable::{stable_read, stable_size};
 use ic_sqlite_features::CONN;
 use sha2::{Digest, Sha256};
 
@@ -22,6 +22,15 @@ pub fn create_tables_if_not_exist() -> Result<()> {
         .unwrap_or(false)
     });
 
+    //     -- DEPRECATED
+    // -- Create Badges table
+    // -- Might be replaced by nfts soon
+    // -- CREATE TABLE Badges (
+    //     -- id UUID PRIMARY KEY UNIQUE NOT NULL,
+    //     -- src VARCHAR,
+    //     -- lvl INT,
+    //     -- owner UUID REFERENCES User(wallet_address)
+    // -- );
     if !table_exists {
         conn.execute_batch(
             format!(
@@ -29,20 +38,12 @@ pub fn create_tables_if_not_exist() -> Result<()> {
             BEGIN;
 PRAGMA foreign_keys = ON;
 
--- Create Badges table 
--- Might be replaced by nfts soon
-CREATE TABLE Badges (
-    id UUID PRIMARY KEY UNIQUE NOT NULL,
-    src VARCHAR,
-    lvl INT,
-    owner UUID REFERENCES User(wallet_address)
-);
-
 -- Create Aliens table
 CREATE TABLE Aliens (
-    id UUID PRIMARY KEY NOT NULL,
+    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
     lvl INT NOT NULL,
-    data VARCHAR NOT NULL UNIQUE -- should be a md5 or sha256 of the image
+    owner VARCHAR NOT NULL,
+    FOREIGN KEY (owner) REFERENCES User(wallet_address)
 );
 
 -- Create Task table
@@ -58,10 +59,10 @@ CREATE TABLE Task (
 
 -- Create task_logs table
 CREATE TABLE Task_logs (
-    log_id UUID PRIMARY KEY NOT NULL,
+    id UUID PRIMARY KEY NOT NULL,
     task_id UUID NOT NULL,
     datetime TEXT NOT NULL,
-    completed_by TEXT,
+    completed_by VARCHAR,
     FOREIGN KEY (task_id) REFERENCES Task(id),
     FOREIGN KEY (completed_by) REFERENCES User(wallet_address)
 );
@@ -101,8 +102,8 @@ pub fn read_page_from_vfs(page_number: i64) -> Result<Vec<u8>, io::Error> {
     Result::Ok(buffer)
 }
 fn read(buf: &mut [u8], offset: u64) -> Result<(), io::Error> {
-    if stable64_size() > 0 {
-        stable64_read(offset + 8, buf);
+    if stable_size() > 0 {
+        stable_read(offset + 8, buf);
     }
     Result::Ok(())
 }

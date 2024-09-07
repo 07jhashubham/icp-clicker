@@ -26,18 +26,21 @@ pub enum TaskType {
 
 #[update]
 fn fetch_and_commit_tasks() -> Result<String, String> {
-    // Lock the connection
     let mut conn = CONN.lock().map_err(|e| format!("{}", e))?;
     let max_labellings: u8 = *MAX_NUMBER_OF_LABELLINGS_PER_TASK;
-    let tasks_per_user: usize = env::var("TASKS_PER_USER").unwrap_or("5".to_string()).parse().unwrap();
+    let tasks_per_user: usize = env::var("TASKS_PER_USER")
+        .unwrap_or("5".to_string())
+        .parse()
+        .unwrap();
 
-    // Start a transaction
-    let tx = conn.transaction().map_err(|e| format!("Transaction start failed: {}", e))?;
+    let tx = conn
+        .transaction()
+        .map_err(|e| format!("Transaction start failed: {}", e))?;
 
-    // Prepare the query with the transaction, execute, and fetch tasks
     let tasks: Vec<Task> = {
-        let mut stmt = tx.prepare(
-            "WITH SelectedTasks AS (
+        let mut stmt = tx
+            .prepare(
+                "WITH SelectedTasks AS (
                 SELECT id, completed_times, type, desc, data, classes, occupancy
                 FROM Task
                 WHERE completed_times < ?1 AND occupancy < ?1
@@ -51,43 +54,44 @@ fn fetch_and_commit_tasks() -> Result<String, String> {
             -- Update occupancy for the selected tasks
             UPDATE Task
             SET occupancy = occupancy + 1
-            WHERE id IN (SELECT id FROM SelectedTasks);"
-        ).map_err(|e| format!("{}", e))?;
+            WHERE id IN (SELECT id FROM SelectedTasks);",
+            )
+            .map_err(|e| format!("{}", e))?;
 
         // Execute the query to fetch tasks
-        let task_iter = stmt.query_map(params![max_labellings, tasks_per_user], |row| {
-            Ok(Task {
-                id: row.get(0)?,
-                completed_times: row.get(1)?,
-                r#type: match row.get::<_, String>(2)?.as_str() {
-                    "ai" => TaskType::AI,
-                    "social" => TaskType::Social,
-                    _ => panic!(),
-                },
-                desc: row.get(3)?,
-                data: row.get(4)?,
-                classes: row.get(5)?,
-                occupancy: row.get(6)?,
+        let task_iter = stmt
+            .query_map(params![max_labellings, tasks_per_user], |row| {
+                Ok(Task {
+                    id: row.get(0)?,
+                    completed_times: row.get(1)?,
+                    r#type: match row.get::<_, String>(2)?.as_str() {
+                        "ai" => TaskType::AI,
+                        "social" => TaskType::Social,
+                        _ => panic!(),
+                    },
+                    desc: row.get(3)?,
+                    data: row.get(4)?,
+                    classes: row.get(5)?,
+                    occupancy: row.get(6)?,
+                })
             })
-        }).map_err(|e| format!("Task fetch failed: {}", e))?;
+            .map_err(|e| format!("Task fetch failed: {}", e))?;
 
-        // Collect tasks into a vector
         task_iter.filter_map(|t| t.ok()).collect()
     };
 
-    // At this point, `stmt` is out of scope and dropped, so we can commit the transaction
-    tx.commit().map_err(|e| format!("Transaction commit failed: {}", e))?;
+    tx.commit()
+        .map_err(|e| format!("Transaction commit failed: {}", e))?;
 
-    // Serialize the tasks to JSON and return
     Ok(serde_json::to_string(&tasks).unwrap())
 }
 
-
 pub fn clear_tasks_occupancy(t_ids: &[String]) -> Result<(), String> {
-
     let mut conn = CONN.lock().map_err(|e| format!("{}", e))?;
 
-    let tx = conn.transaction().map_err(|e| format!("Transaction start failed: {}", e))?;
+    let tx = conn
+        .transaction()
+        .map_err(|e| format!("Transaction start failed: {}", e))?;
 
     let placeholders = t_ids.iter().map(|_| "?").collect::<Vec<_>>().join(", ");
 
@@ -96,21 +100,31 @@ pub fn clear_tasks_occupancy(t_ids: &[String]) -> Result<(), String> {
         placeholders
     );
 
-    let params: Vec<&dyn ic_sqlite_features::ToSql> = t_ids.iter().map(|id| id as &dyn ic_sqlite_features::ToSql).collect();
+    let params: Vec<&dyn ic_sqlite_features::ToSql> = t_ids
+        .iter()
+        .map(|id| id as &dyn ic_sqlite_features::ToSql)
+        .collect();
 
-    tx.execute(&query, &*params).map_err(|e| format!("Task update failed: {}", e))?;
+    tx.execute(&query, &*params)
+        .map_err(|e| format!("Task update failed: {}", e))?;
 
-    tx.commit().map_err(|e| format!("Transaction commit failed: {}", e))?;
+    tx.commit()
+        .map_err(|e| format!("Transaction commit failed: {}", e))?;
 
     Ok(())
 }
 
 #[update]
-pub fn complete_tasks(t_id: String, wallet_address: String, date_time: String) -> Result<(), String> {
-    // Lock the connection
+pub fn complete_tasks(
+    t_id: String,
+    wallet_address: String,
+    date_time: String,
+) -> Result<(), String> {
     let mut conn = CONN.lock().map_err(|e| format!("{}", e))?;
 
-    let tx = conn.transaction().map_err(|e| format!("Transaction start failed: {}", e))?;
+    let tx = conn
+        .transaction()
+        .map_err(|e| format!("Transaction start failed: {}", e))?;
 
     tx.execute("UPDATE Task SET occupancy = occupancy - 1, completed_times = completed_times + 1 WHERE id = ?1", [&t_id])
         .map_err(|e| format!("Task update failed: {}", e))?;
@@ -119,10 +133,12 @@ pub fn complete_tasks(t_id: String, wallet_address: String, date_time: String) -
     tx.execute(
         "UPDATE Task_logs
          SET datetime = ?1, completed_by = ?2
-         WHERE log_id = ?3",
-        params![date_time, wallet_address, logger_id]
-    ).map_err(|e| format!("{}", e))?;
-    tx.commit().map_err(|e| format!("Transaction commit failed: {}", e))?;
+         WHERE id = ?3",
+        params![date_time, wallet_address, logger_id],
+    )
+    .map_err(|e| format!("{}", e))?;
+    tx.commit()
+        .map_err(|e| format!("Transaction commit failed: {}", e))?;
 
     Ok(())
 }

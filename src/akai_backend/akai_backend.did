@@ -1,13 +1,18 @@
-type Result = variant { Ok; Err : text };
-type Result_1 = variant { Ok : text; Err : text };
+type Result = variant { Ok : text; Err : text };
+type Result_1 = variant { Ok; Err : text };
 service : () -> {
-  create_new_user : (text, opt text, opt text, opt text, opt text) -> (Result);
+  combine_aliens : (text, text) -> (Result);
+  complete_tasks : (text, text, text) -> (Result_1);
+  create_new_user : (text, opt text, opt text, opt text, opt text) -> (
+      Result_1,
+    );
   dump_and_compress_database : () -> (blob) query;
-  fetch_tasks : () -> (Result_1);
+  fetch_and_commit_tasks : () -> (Result);
   get_all_users : () -> (text) query;
-  get_user_badges : (text) -> (Result_1) query;
-  get_user_data : (text) -> (Result_1) query;
-  update_email : (text, text) -> (Result);
-  update_instagram : (text, text) -> (Result);
-  update_twitter : (text, text) -> (Result);
+  get_user_data : (text) -> (Result) query;
+  spawn_aliens : (text, nat64) -> (Result);
+  update_email : (text, text) -> (Result_1);
+  update_instagram : (text, text) -> (Result_1);
+  update_name : (text, opt text) -> (Result_1);
+  update_twitter : (text, text) -> (Result_1);
 }
