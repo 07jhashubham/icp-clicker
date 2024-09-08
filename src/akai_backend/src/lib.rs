@@ -1,19 +1,14 @@
-use std::{cell::RefCell, env, time::Duration};
+use std::{env, time::Duration};
 
 use backup::sync::backup;
 use db::{task::settle_tasks, utils::create_tables_if_not_exist};
 use dotenv::dotenv;
 use ic_cdk::spawn;
 use ic_cdk_timers::set_timer_interval;
-use ic_stable_memory::{collections::SVec, SBox};
-use ic_stable_structures::{
-    memory_manager::{MemoryId, MemoryManager, VirtualMemory},
-    DefaultMemoryImpl, StableBTreeMap,
-};
 use lazy_static::lazy_static;
 mod db;
 mod backup;
-mod scale;
+mod scale_ops;
 lazy_static! {
     pub static ref COMMIT_BACKUPS: bool = {
         match env::var("COMMIT_BACKUPS").as_deref() {
@@ -39,14 +34,8 @@ lazy_static! {
             .unwrap_or(0)
     };
 }
-type Memory = VirtualMemory<DefaultMemoryImpl>;
 
-thread_local! {
-    // The memory manager is used for simulating multiple memories. Given a `MemoryId` it can
-    // return a memory that can be used by stable structures.
 
-    pub static CHILD_CANISTER: RefCell<SVec<SBox<String>>> = RefCell::new(SVec::new());
-}
 #[ic_cdk::init]
 fn init() {
     dotenv().ok();
@@ -56,12 +45,18 @@ fn init() {
         set_timer_interval(Duration::from_secs(*BACKUP_DURATION), || spawn(backup()));
     }
 
+    // run polled settlement every 10 secs
     set_timer_interval(Duration::from_secs(10), || {
-        let future = settle_tasks(); // this creates a future
-        futures::executor::block_on(future).unwrap(); // blocks on the future
+        let future = settle_tasks();
+        futures::executor::block_on(future).unwrap();
     });
 
-    
+    // run polled auto_scaling every 20 secs WORK IN PROGRESS
+    // set_timer_interval(Duration::from_secs(20), || {
+    //     let future = poll_scale();
+    //     futures::executor::block_on(future);
+    // });
+
     ic_cdk::println!("Initialization Complete!");
 }
 
