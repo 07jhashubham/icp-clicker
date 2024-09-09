@@ -1,19 +1,8 @@
 use anyhow::Result;
 use ic_cdk::{query, update};
 use ic_sqlite_features::{params, ToSql, CONN};
-use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Serialize, Deserialize)]
-pub struct User {
-    pub name: Option<String>,
-    pub wallet_address: String,
-    pub clicks: i32,
-    pub email: Option<String>,
-    pub twitter: Option<String>,
-    pub instagram: Option<String>,
-    pub exp: usize,
-    pub rating: usize,
-}
+use super::User;
 
 #[update]
 pub fn create_new_user(
@@ -137,34 +126,6 @@ pub(crate) fn update_rating(
     tx: &ic_sqlite_features::Transaction<'_>,
 ) -> Result<(), String> {
     increment_field(wallet_address, "rating", amt, tx)
-}
-#[query]
-pub fn get_all_users() -> String {
-    let conn = CONN.lock().unwrap();
-    let mut stmt = conn
-        .prepare(
-            "SELECT name, wallet_address, clicks, email, twitter, instagram, exp, rating FROM User",
-        )
-        .unwrap();
-
-    let user_iter = stmt
-        .query_map([], |row| {
-            Ok(User {
-                name: row.get(0).ok(),
-                wallet_address: row.get(1).unwrap(),
-                clicks: row.get(2).unwrap(),
-                email: row.get(3).ok(),
-                twitter: row.get(4).ok(),
-                instagram: row.get(5).ok(),
-                exp: row.get(6).unwrap(),
-                rating: row.get(7).unwrap(),
-            })
-        })
-        .unwrap();
-
-    let u = user_iter.map(|u| u.unwrap()).collect::<Vec<_>>();
-
-    serde_json::to_string(&u).unwrap()
 }
 
 #[query]

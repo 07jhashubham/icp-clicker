@@ -1,11 +1,12 @@
 use std::{env, time::Duration};
 
 use backup::sync::backup;
-use db::{task::settle_tasks, utils::create_tables_if_not_exist};
+use db::{task::ops::settle_tasks, utils::create_tables_if_not_exist};
 use dotenv::dotenv;
 use ic_cdk::spawn;
 use ic_cdk_timers::set_timer_interval;
 use lazy_static::lazy_static;
+use crate::db::task::TaskType;
 mod db;
 mod backup;
 mod scale_ops;
@@ -29,9 +30,9 @@ lazy_static! {
     };
     pub static ref MAX_NUMBER_OF_LABELLINGS_PER_TASK: u8 = {
         env::var("MAX_NUMBER_OF_LABELLINGS_PER_TASK")
-            .unwrap_or_else(|_| "0".to_string())
+            .unwrap_or_else(|_| "3".to_string())
             .parse()
-            .unwrap_or(0)
+            .unwrap_or(3)
     };
 }
 

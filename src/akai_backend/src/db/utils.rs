@@ -21,16 +21,6 @@ pub fn create_tables_if_not_exist() -> Result<()> {
         )
         .unwrap_or(false)
     });
-
-    //     -- DEPRECATED
-    // -- Create Badges table
-    // -- Might be replaced by nfts soon
-    // -- CREATE TABLE Badges (
-    //     -- id UUID PRIMARY KEY UNIQUE NOT NULL,
-    //     -- src VARCHAR,
-    //     -- lvl INT,
-    //     -- owner UUID REFERENCES User(wallet_address)
-    // -- );
     if !table_exists {
         conn.execute_batch(
             format!(
@@ -48,7 +38,7 @@ pub fn create_tables_if_not_exist() -> Result<()> {
 
                 -- Create Task table
                 CREATE TABLE Task (
-                    id UUID PRIMARY KEY NOT NULL,
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
                     completed_times INT DEFAULT 0 CHECK (completed_times <= {}),
                     type TEXT CHECK(type IN ('AI', 'Social')),
                     desc VARCHAR,
@@ -60,9 +50,8 @@ pub fn create_tables_if_not_exist() -> Result<()> {
                 -- Create Task_logs table
                 CREATE TABLE Task_logs (
                     id UUID PRIMARY KEY NOT NULL,
-                    task_id UUID NOT NULL,
-                    datetime TEXT NOT NULL,
-                    completed_by VARCHAR,
+                    task_id INTEGER NOT NULL,
+                    completed_by TEXT,
                     image_link VARCHAR,
                     FOREIGN KEY (task_id) REFERENCES Task(id),
                     FOREIGN KEY (completed_by) REFERENCES User(wallet_address)
@@ -70,12 +59,12 @@ pub fn create_tables_if_not_exist() -> Result<()> {
 
                 -- Create User table
                 CREATE TABLE User (
-                    name VARCHAR,
-                    wallet_address VARCHAR PRIMARY KEY UNIQUE NOT NULL,
+                    name TEXT,
+                    wallet_address TEXT PRIMARY KEY UNIQUE NOT NULL,
                     clicks INT DEFAULT 0 NOT NULL,
-                    email VARCHAR,
-                    twitter VARCHAR DEFAULT NULL,
-                    instagram VARCHAR,
+                    email VARCHAR(50) DEFAULT NULL,
+                    twitter VARCHAR(15) DEFAULT NULL,
+                    instagram VARCHAR(30) DEFAULT NULL,
                     exp INT DEFAULT 0,
                     rating INT DEFAULT 0
                 );
