@@ -1,21 +1,15 @@
+import json
 import numpy as np
 
 # Function to calculate IoU between two bounding boxes
 def calculate_iou(boxA, boxB):
-    # Coordinates of the intersection rectangle
     xA = max(boxA[0], boxB[0])
     yA = max(boxA[1], boxB[1])
     xB = min(boxA[0] + boxA[2], boxB[0] + boxB[2])
     yB = min(boxA[1] + boxA[3], boxB[1] + boxB[3])
-    
-    # Compute the area of intersection
     interArea = max(0, xB - xA) * max(0, yB - yA)
-    
-    # Compute the area of both bounding boxes
     boxAArea = boxA[2] * boxA[3]
     boxBArea = boxB[2] * boxB[3]
-    
-    # Compute the IoU
     iou = interArea / float(boxAArea + boxBArea - interArea)
     return iou
 
@@ -42,27 +36,48 @@ def cluster_bboxes(bboxes, iou_threshold=0.5):
             clusters.append([box])
     return clusters
 
-# Example bounding boxes from users: [x, y, width, height]
-bboxes = [
-    [50, 50, 100, 100],  # User 1
-    [52, 48, 102, 98],   # User 2
-    [200, 200, 100, 100] # User 3 (outlier)
-]
+# Function to process annotations and find consensus bounding box
+def process_annotations(data, iou_threshold=0.5):
+    for annotation in data["annotations"]:
+        # Extract bounding boxes and areas
+        bboxes = [annotation[f"bbox{i}"] for i in range(1, 5)]
+        areas = [annotation[f"area{i}"] for i in range(1, 5)]
+        
+        # Example user weights (these can be dynamic based on user performance)
+        weights = [1 / area for area in areas]  # You can adjust this weight calculation based on your scoring method
+        
+        # Step 1: Cluster bounding boxes based on IoU
+        clusters = cluster_bboxes(bboxes, iou_threshold=iou_threshold)
+        
+        # Step 2: Calculate consensus bounding box for each cluster
+        consensus_bboxes = []
+        for cluster in clusters:
+            cluster_weights = [weights[bboxes.index(box)] for box in cluster]
+            consensus_box = weighted_average_bbox(cluster, cluster_weights)
+            consensus_bboxes.append(consensus_box)
+        
+        # Step 3: Assign final consensus to the annotation
+        if consensus_bboxes:
+            annotation["final_bbox"] = consensus_bboxes[0]  # You can handle multiple clusters differently
+        else:
+            annotation["final_bbox"] = None
 
-# Example user weights (based on their performance)
-weights = [0.8, 0.9, 0.5]
+    return data
 
-# Step 1: Cluster bounding boxes based on IoU
-clusters = cluster_bboxes(bboxes, iou_threshold=0.5)
+# Function to read JSON file, process, and write updated annotations back
+def update_annotations_with_consensus(file_name):
+    # Load the JSON file
+    with open(file_name, 'r') as f:
+        data = json.load(f)
+    
+    # Process annotations
+    updated_data = process_annotations(data)
+    
+    # Save the updated JSON file
+    with open('updated_' + file_name, 'w') as f:
+        json.dump(updated_data, f, indent=4)
+    
+    print(f"Updated annotations saved to updated_{file_name}")
 
-# Step 2: Calculate consensus bounding box for each cluster
-consensus_bboxes = []
-for cluster in clusters:
-    # Get the weights for the users in the current cluster
-    cluster_weights = [weights[bboxes.index(box)] for box in cluster]
-    # Calculate the weighted average bounding box for this cluster
-    consensus_box = weighted_average_bbox(cluster, cluster_weights)
-    consensus_bboxes.append(consensus_box)
-
-# Output final consensus bounding boxes
-print("Consensus Bounding Boxes:", consensus_bboxes)
+# Call the function with the file name
+update_annotations_with_consensus('modified_annotations_with_outliers.json')
