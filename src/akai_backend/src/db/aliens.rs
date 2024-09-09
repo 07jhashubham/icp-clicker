@@ -1,7 +1,7 @@
 use std::ops::Add;
 
 use ic_cdk::update;
-use ic_rand::{rng::RandomNumberGenerator, true_rng::generate};
+use ic_rand::rng::RandomNumberGenerator;
 use ic_sqlite_features::{params, CONN};
 use serde::{Deserialize, Serialize};
 use serde_json::json;

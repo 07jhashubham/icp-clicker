@@ -1,14 +1,14 @@
 use std::{env, time::Duration};
 
+use crate::db::task::TaskType;
 use backup::sync::backup;
 use db::{task::ops::settle_tasks, utils::create_tables_if_not_exist};
 use dotenv::dotenv;
 use ic_cdk::spawn;
 use ic_cdk_timers::set_timer_interval;
 use lazy_static::lazy_static;
-use crate::db::task::TaskType;
-mod db;
 mod backup;
+mod db;
 mod scale_ops;
 lazy_static! {
     pub static ref COMMIT_BACKUPS: bool = {
@@ -35,7 +35,6 @@ lazy_static! {
             .unwrap_or(3)
     };
 }
-
 
 #[ic_cdk::init]
 fn init() {

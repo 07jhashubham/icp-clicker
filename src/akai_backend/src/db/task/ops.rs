@@ -4,24 +4,35 @@ use ic_cdk::update;
 use ic_sqlite_features::{params, params_from_iter, CONN};
 
 use crate::{
-    db::{ user::ops::{update_exp, update_rating}, utils::generate_hash_id}, MAX_NUMBER_OF_LABELLINGS_PER_TASK
+    db::{
+        user::ops::{update_exp, update_rating},
+        utils::generate_hash_id,
+    },
+    MAX_NUMBER_OF_LABELLINGS_PER_TASK,
 };
 
 use super::{Task, TaskType};
 
-
-
 #[update]
-fn add_task(r#type: TaskType, desc: String, data: String, classes: Option<String>) -> Result<(), String>{
+fn add_task(
+    r#type: TaskType,
+    desc: String,
+    data: String,
+    classes: Option<String>,
+) -> Result<(), String> {
     let mut conn = CONN.lock().map_err(|e| e.to_string())?;
 
     let tx = conn.transaction().map_err(|e| e.to_string())?;
 
-    tx.execute("INSERT INTO Task (type, desc, data, classes)
-VALUES (?1, ?2, ?3, ?4);", params![r#type.to_string(), desc, data, classes]).map_err(|e|e.to_string())?;
+    tx.execute(
+        "INSERT INTO Task (type, desc, data, classes)
+VALUES (?1, ?2, ?3, ?4);",
+        params![r#type.to_string(), desc, data, classes],
+    )
+    .map_err(|e| e.to_string())?;
 
-tx.commit().map_err(|e| e.to_string())?;
-Ok(())
+    tx.commit().map_err(|e| e.to_string())?;
+    Ok(())
 }
 #[update]
 fn fetch_and_commit_tasks() -> Result<String, String> {
@@ -55,7 +66,7 @@ fn fetch_and_commit_tasks() -> Result<String, String> {
         let task_iter = stmt
             .query_map(params![max_labellings, tasks_per_user], |row| {
                 Ok(Task {
-                    id: row.get::<_, usize>(0)?,  // explicitly getting id as i64
+                    id: row.get::<_, usize>(0)?, // explicitly getting id as i64
                     completed_times: row.get(1)?,
                     r#type: match row.get::<_, String>(2)?.as_str() {
                         "AI" => TaskType::AI,
@@ -78,7 +89,7 @@ fn fetch_and_commit_tasks() -> Result<String, String> {
     if !task_ids.is_empty() {
         let placeholders: Vec<String> = task_ids.iter().map(|_| "?".to_string()).collect();
         let placeholder_str = placeholders.join(",");
-        
+
         let update_query = format!(
             "UPDATE Task
             SET occupancy = occupancy + 1
@@ -110,9 +121,10 @@ pub fn clear_tasks_occupancy(t_ids: Vec<usize>) -> Result<(), String> {
         .transaction()
         .map_err(|e| format!("Transaction start failed: {}", e))?;
 
-        {let placeholders: Vec<String> = t_ids.iter().map(|_| "?".to_string()).collect();
+    {
+        let placeholders: Vec<String> = t_ids.iter().map(|_| "?".to_string()).collect();
         let placeholder_str = placeholders.join(",");
-        
+
         let update_query = format!(
             "UPDATE Task
             SET occupancy = occupancy - 1
@@ -127,7 +139,8 @@ pub fn clear_tasks_occupancy(t_ids: Vec<usize>) -> Result<(), String> {
         // Execute the batched update
         update_stmt
             .execute(params_from_iter(t_ids.iter()))
-            .map_err(|e| format!("Update failed: {}", e))?;}
+            .map_err(|e| format!("Update failed: {}", e))?;
+    }
 
     tx.commit()
         .map_err(|e| format!("Transaction commit failed: {}", e))?;

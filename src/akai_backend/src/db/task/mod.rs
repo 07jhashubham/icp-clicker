@@ -1,8 +1,8 @@
 use candid::CandidType;
 use serde::{Deserialize, Serialize};
 
-pub mod ops;
 pub mod debug;
+pub mod ops;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Task {
@@ -21,11 +21,11 @@ pub enum TaskType {
     Social,
 }
 
-impl ToString for TaskType{
+impl ToString for TaskType {
     fn to_string(&self) -> String {
-        match &self{
+        match &self {
             TaskType::AI => "AI".to_owned(),
-            TaskType::Social => "Social".to_owned()
+            TaskType::Social => "Social".to_owned(),
         }
     }
 }

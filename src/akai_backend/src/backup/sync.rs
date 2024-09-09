@@ -12,7 +12,6 @@ use std::{env, io::Write};
 
 use crate::db::utils::read_page_from_vfs;
 
-
 #[ic_cdk::query]
 fn dump_and_compress_database() -> Vec<u8> {
     let mut conn = CONN.lock().unwrap();

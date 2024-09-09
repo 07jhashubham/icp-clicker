@@ -3,7 +3,6 @@ use ic_sqlite_features::CONN;
 
 use super::User;
 
-
 #[query]
 pub fn get_all_users() -> String {
     let conn = CONN.lock().unwrap();
@@ -17,13 +16,13 @@ pub fn get_all_users() -> String {
         .query_map([], |row| {
             Ok(User {
                 name: row.get(0).ok(),
-                wallet_address: row.get(1).unwrap(),
-                clicks: row.get(2).unwrap(),
+                wallet_address: row.get(1)?,
+                clicks: row.get(2)?,
                 email: row.get(3).ok(),
                 twitter: row.get(4).ok(),
                 instagram: row.get(5).ok(),
-                exp: row.get(6).unwrap(),
-                rating: row.get(7).unwrap(),
+                exp: row.get(6)?,
+                rating: row.get(7)?,
             })
         })
         .unwrap();

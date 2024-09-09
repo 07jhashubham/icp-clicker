@@ -1,7 +1,7 @@
 use serde::{Deserialize, Serialize};
 
-pub mod ops;
 pub mod debug;
+pub mod ops;
 
 #[derive(Debug, Serialize, Deserialize)]
 pub struct User {
