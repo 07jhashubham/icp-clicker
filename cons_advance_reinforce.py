@@ -13,6 +13,7 @@ import torch.nn as nn
 import torch.optim as optim
 import torch.nn.functional as F
 import random
+
 def remove_outliers(boxes):
     """
     Remove outlier bounding boxes using Mahalanobis distance with regularization.
@@ -161,8 +162,6 @@ def train_autoencoder_with_rl(autoencoder, roi_dataset, iou_scores, user_ratings
             # Compute reward
             reward = -reconstruction_error.item() + iou_score + user_rating_normalized
 
-            # Print state shape before storing
-            # print(f"State shape before storing: {state.shape}")
             # Store experience
             experience_replay.push(state.detach(), reward)
 
@@ -176,9 +175,6 @@ def train_autoencoder_with_rl(autoencoder, roi_dataset, iou_scores, user_ratings
             if torch.cuda.is_available():
                 rewards_batch = rewards_batch.to('cuda')
                 states_batch = states_batch.to('cuda')
-
-            # Print states_batch shape
-            # print(f"states_batch shape: {states_batch.shape}")
 
             # Compute predicted actions
             predicted_actions = autoencoder(states_batch)
@@ -207,7 +203,8 @@ def extract_features(image, boxes, autoencoder, experience_replay, retrain_inter
     Periodically retrain the autoencoder using reinforcement learning with experience replay.
     Returns:
         fe_values: List of feature values.
-        reconstruction_errors: Reconstruction errors for each ROI.
+        reconstruction_errors_normalized: Normalized reconstruction errors for each ROI.
+        composite_confidence: Combined confidence scores incorporating IoU and reconstruction errors.
         autoencoder: The trained autoencoder.
         valid_indices: Indices of boxes for which features were extracted.
         step_counter: Updated step counter for retraining.
@@ -244,7 +241,7 @@ def extract_features(image, boxes, autoencoder, experience_replay, retrain_inter
 
     # Stack all ROI tensors
     if len(roi_tensors) == 0:
-        return [], [], autoencoder, [], step_counter
+        return [], [], [], autoencoder, [], step_counter
 
     roi_dataset = torch.stack(roi_tensors)
 
@@ -280,39 +277,62 @@ def extract_features(image, boxes, autoencoder, experience_replay, retrain_inter
 
     # Normalize reconstruction errors
     recon_errors = reconstruction_errors.cpu().numpy()
-    recon_errors = MinMaxScaler().fit_transform(recon_errors.reshape(-1, 1)).flatten()
+    recon_errors_normalized = MinMaxScaler().fit_transform(recon_errors.reshape(-1, 1)).flatten()
 
-    return fe_values, recon_errors, autoencoder, valid_indices, step_counter  # Return reconstruction errors and valid indices
-def bayesian_update(ur_values, fe_values):
+    # Combine IoU scores with Reconstruction Errors to form a composite confidence score
+    if iou_scores is not None:
+        # Select IoU scores corresponding to valid_indices
+        iou_scores_valid = np.array(iou_scores)[valid_indices]
+        # Ensure iou_scores_valid has the same length as recon_errors_normalized
+        if len(iou_scores_valid) != len(recon_errors_normalized):
+            print("Mismatch in lengths between IoU scores and reconstruction errors. Adjusting...")
+            min_length = min(len(iou_scores_valid), len(recon_errors_normalized))
+            iou_scores_valid = iou_scores_valid[:min_length]
+            recon_errors_normalized = recon_errors_normalized[:min_length]
+            fe_values = fe_values[:min_length]
+            valid_indices = valid_indices[:min_length]
+        composite_confidence = 0.7 * iou_scores_valid + 0.3 * (1 - recon_errors_normalized)
+    else:
+        # If IoU scores are not available, rely solely on reconstruction errors
+        composite_confidence = 1 - recon_errors_normalized
+
+    # Debug statements to verify lengths
+    print(f"Length of iou_scores_valid: {len(iou_scores_valid)}")
+    print(f"Length of recon_errors_normalized: {len(recon_errors_normalized)}")
+    print(f"Length of composite_confidence: {len(composite_confidence)}")
+    print(f"Length of valid_indices: {len(valid_indices)}")
+
+    return fe_values, recon_errors_normalized, composite_confidence, autoencoder, valid_indices, step_counter
+
+def bayesian_update(user_ratings, composite_confidence):
     """
-    Compute posterior probabilities using Bayesian update.
+    Compute posterior probabilities using Bayesian update by integrating user ratings and composite confidence.
     """
     epsilon = 1e-6  # Small value to avoid zeros
 
-    # Normalize UR and FE values
-    ur_values = np.array(ur_values).reshape(-1)
-    fe_values = np.array(fe_values).reshape(-1)
-
-    # Handle case when all values are the same
-    if np.max(ur_values) == np.min(ur_values):
-        ur_values_normalized = np.full(ur_values.shape, 0.5)
+    # Normalize user ratings
+    user_ratings = np.array(user_ratings).reshape(-1)
+    if np.max(user_ratings) == np.min(user_ratings):
+        user_ratings_normalized = np.full(user_ratings.shape, 0.5)
     else:
         scaler = MinMaxScaler()
-        ur_values_normalized = scaler.fit_transform(ur_values.reshape(-1, 1)).flatten()
+        user_ratings_normalized = scaler.fit_transform(user_ratings.reshape(-1, 1)).flatten()
 
-    if np.max(fe_values) == np.min(fe_values):
-        fe_values_normalized = np.full(fe_values.shape, 0.5)
+    # Normalize composite confidence
+    composite_confidence = np.array(composite_confidence).reshape(-1)
+    if np.max(composite_confidence) == np.min(composite_confidence):
+        composite_confidence_normalized = np.full(composite_confidence.shape, 0.5)
     else:
         scaler = MinMaxScaler()
-        fe_values_normalized = scaler.fit_transform(fe_values.reshape(-1, 1)).flatten()
+        composite_confidence_normalized = scaler.fit_transform(composite_confidence.reshape(-1, 1)).flatten()
 
     # Add epsilon to avoid zeros
-    ur_values_normalized = ur_values_normalized * (1 - 2 * epsilon) + epsilon
-    fe_values_normalized = fe_values_normalized * (1 - 2 * epsilon) + epsilon
+    user_ratings_normalized = user_ratings_normalized * (1 - 2 * epsilon) + epsilon
+    composite_confidence_normalized = composite_confidence_normalized * (1 - 2 * epsilon) + epsilon
 
     # Prior and Likelihood
-    prior = ur_values_normalized
-    likelihood = fe_values_normalized
+    prior = user_ratings_normalized
+    likelihood = composite_confidence_normalized
     posterior = prior * likelihood
     sum_posterior = np.sum(posterior)
 
@@ -333,14 +353,20 @@ def platt_scaling(scores, labels):
     probs = lr.predict_proba(scores.reshape(-1,1))[:,1]
     return probs
 
-def compute_final_bbox(boxes, weights):
+def compute_final_bbox(boxes, weights, recon_errors_normalized):
     """
-    Compute the final bounding box as a weighted average.
+    Compute the final bounding box as a weighted average, incorporating reconstruction errors.
     """
     boxes = np.array(boxes)
     weights = np.array(weights)
-    weights /= np.sum(weights)
-    final_bbox = np.average(boxes, axis=0, weights=weights)
+    # Incorporate reconstruction errors: higher errors reduce the weight
+    adjusted_weights = weights * (1 - recon_errors_normalized)
+    # Normalize the adjusted weights
+    if np.sum(adjusted_weights) == 0:
+        adjusted_weights = np.full_like(adjusted_weights, 1.0 / len(adjusted_weights))
+    else:
+        adjusted_weights /= np.sum(adjusted_weights)
+    final_bbox = np.average(boxes, axis=0, weights=adjusted_weights)
     return final_bbox
 
 def load_json_file(json_file):
@@ -357,7 +383,7 @@ def load_image(image_folder, file_name):
 
 def main():
     image_folder = 'test'
-    json_file = 'full_anotation.json'
+    json_file = '/media/joeru/380C4A280C49E18C/projects/akaispace-consensus/icp-clicker/full_anotation.json'
     data = load_json_file(json_file)
     autoencoder = ResNetAutoencoder()  # Initialize autoencoder outside the loop for reuse
     experience_replay = ExperienceReplayBuffer(capacity=50)
@@ -384,40 +410,40 @@ def main():
         iou_scores = compute_iou_scores(boxes_inliers)
         print(f"IoU Scores: {iou_scores}")
 
-        # Step 3: Extract features and reconstruction errors
-        fe_values, recon_errors, autoencoder, valid_indices, step_counter = extract_features(
+        # Step 3: Extract features and compute composite confidence
+        fe_values, recon_errors_normalized, composite_confidence, autoencoder, valid_indices, step_counter = extract_features(
             image, boxes_inliers, autoencoder, experience_replay, retrain_interval=2, step_counter=step_counter,
             iou_scores=iou_scores, user_ratings=user_ratings_inliers
         )
         print(f"Feature Values: {fe_values}")
-        print(f"Reconstruction Errors: {recon_errors}")
+        print(f"Reconstruction Errors (Normalized): {recon_errors_normalized}")
+        print(f"Composite Confidence: {composite_confidence}")
+
         # Update user ratings, boxes, and iou_scores to match valid_indices
         user_ratings_valid = [user_ratings_inliers[i] for i in valid_indices]
         boxes_valid = [boxes_inliers[i] for i in valid_indices]
         iou_scores_valid = [iou_scores[i] for i in valid_indices]
 
         # Active Learning Decision
-        # If user ratings are not available, use reconstruction errors as uncertainty measure
+        # If user ratings are not available, use composite confidence to simulate user ratings
         if not user_ratings_valid:
-            print("No user ratings available. Assigning default ratings.")
-            # Simulate user ratings without prompting
-            # Assign higher ratings to samples with lower reconstruction errors (simulating user preference)
-            recon_errors_np = np.array(recon_errors)
-            # Invert reconstruction errors to simulate ratings (lower error -> higher rating)
-            simulated_ratings = 5.0 * (1 - recon_errors_np / recon_errors_np.max())
+            print("No user ratings available. Assigning simulated ratings based on composite confidence.")
+            # Simulate user ratings: Higher composite confidence leads to higher simulated ratings
+            composite_confidence_np = np.array(composite_confidence)
+            simulated_ratings = 5.0 * composite_confidence_np  # Scale to 0-5
             user_ratings_valid = simulated_ratings.tolist()
 
         # Ensure lengths match
-        if len(fe_values) != len(user_ratings_valid):
+        if len(composite_confidence) != len(user_ratings_valid):
             print("Mismatch in lengths after active learning. Adjusting...")
-            min_length = min(len(fe_values), len(user_ratings_valid))
-            fe_values = fe_values[:min_length]
+            min_length = min(len(composite_confidence), len(user_ratings_valid))
+            composite_confidence = composite_confidence[:min_length]
             user_ratings_valid = user_ratings_valid[:min_length]
             iou_scores_valid = iou_scores_valid[:min_length]
             boxes_valid = boxes_valid[:min_length]
 
-        # Step 4: Bayesian Update
-        posterior_probs = bayesian_update(user_ratings_valid, fe_values)
+        # Step 4: Bayesian Update using composite confidence
+        posterior_probs = bayesian_update(user_ratings_valid, composite_confidence)
         print(f"Posterior Probabilities: {posterior_probs}")
 
         # Step 5: Platt Scaling
@@ -427,7 +453,7 @@ def main():
         print(f"Platt Scaled Values: {platt_values}")
 
         # Step 6: Compute final bounding box
-        final_bbox = compute_final_bbox(boxes_valid, platt_values)
+        final_bbox = compute_final_bbox(boxes_valid, platt_values, recon_errors_normalized)  # Updated call
         print(f"Final Bounding Box: {final_bbox}")
 
         # === Visualization Code (optional) ===

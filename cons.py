@@ -221,18 +221,18 @@ def main():
 
         # === Visualization Code Starts Here ===
         # Draw user's bounding boxes (after outlier removal)
-        # for box in boxes_inliers:
-        #     x, y, w, h = map(int, box)
-        #     cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)  # Green color for user boxes
+        for box in boxes_inliers:
+            x, y, w, h = map(int, box)
+            cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)  # Green color for user boxes
 
-        # # Draw the final bounding box computed by the algorithm
-        # x, y, w, h = map(int, final_bbox)
-        # cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)  # Red color for final box
+        # Draw the final bounding box computed by the algorithm
+        x, y, w, h = map(int, final_bbox)
+        cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)  # Red color for final box
 
-        # # Display the image with bounding boxes
-        # cv2.imshow('Bounding Boxes', image)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
+        # Display the image with bounding boxes
+        cv2.imshow('Bounding Boxes', image)
+        cv2.waitKey(0)
+        cv2.destroyAllWindows()
         # === Visualization Code Ends Here ===
 
 if __name__ == "__main__":
