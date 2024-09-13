@@ -332,19 +332,13 @@ def main():
         # Active Learning Decision
         # If user ratings are not available, use reconstruction errors as uncertainty measure
         if not user_ratings_valid:
-            # Select samples with high reconstruction error for user feedback
-            uncertainty_threshold = np.mean(recon_errors)
-            uncertain_indices = [i for i, err in enumerate(recon_errors) if err > uncertainty_threshold]
-            print(f"Uncertain samples (need user feedback): {uncertain_indices}")
-            # Simulate user providing ratings for uncertain samples
-            for idx in uncertain_indices:
-                # Here, you would prompt the user; we'll simulate it
-                simulated_rating = float(input(f"Please rate the bounding box {boxes_valid[idx]} from 0 to 5: "))
-                user_ratings_valid.append(simulated_rating)
-            # For other samples, assign a neutral rating
-            for i in range(len(boxes_valid)):
-                if i not in uncertain_indices:
-                    user_ratings_valid.append(2.5)  # Neutral rating
+            print("No user ratings available. Assigning default ratings.")
+            # Simulate user ratings without prompting
+            # Assign higher ratings to samples with lower reconstruction errors (simulating user preference)
+            recon_errors_np = np.array(recon_errors)
+            # Invert reconstruction errors to simulate ratings (lower error -> higher rating)
+            simulated_ratings = 5.0 * (1 - recon_errors_np / recon_errors_np.max())
+            user_ratings_valid = simulated_ratings.tolist()
 
         # Ensure lengths match
         if len(fe_values) != len(user_ratings_valid):
