@@ -231,21 +231,21 @@ def bayesian_update(ur_values, fe_values):
     epsilon = 1e-6  # Small value to avoid zeros
 
     # Normalize UR and FE values
-    ur_values = np.array(ur_values).reshape(-1, 1)
-    fe_values = np.array(fe_values).reshape(-1, 1)
+    ur_values = np.array(ur_values).reshape(-1)
+    fe_values = np.array(fe_values).reshape(-1)
 
     # Handle case when all values are the same
     if np.max(ur_values) == np.min(ur_values):
-        ur_values_normalized = np.full_like(ur_values, 0.5)
+        ur_values_normalized = np.full(ur_values.shape, 0.5)
     else:
         scaler = MinMaxScaler()
-        ur_values_normalized = scaler.fit_transform(ur_values).flatten()
+        ur_values_normalized = scaler.fit_transform(ur_values.reshape(-1, 1)).flatten()
 
     if np.max(fe_values) == np.min(fe_values):
-        fe_values_normalized = np.full_like(fe_values, 0.5)
+        fe_values_normalized = np.full(fe_values.shape, 0.5)
     else:
         scaler = MinMaxScaler()
-        fe_values_normalized = scaler.fit_transform(fe_values).flatten()
+        fe_values_normalized = scaler.fit_transform(fe_values.reshape(-1, 1)).flatten()
 
     # Add epsilon to avoid zeros
     ur_values_normalized = ur_values_normalized * (1 - 2 * epsilon) + epsilon
@@ -310,7 +310,7 @@ def main():
         # Extract bounding boxes from the annotation
         boxes = [annotation[f'bbox{i}'] for i in range(1, 5)]
         # User ratings (if available); for active learning, we may not have these initially
-        user_ratings = [4.5, 4.0, 4.8, 2.0]  # Ratings from 0 to 5
+        user_ratings = [2.5, 2.5, 2.5, 2.5]  # Ratings from 0 to 5
 
         # Step 1: Remove outliers
         boxes_inliers = remove_outliers(boxes)

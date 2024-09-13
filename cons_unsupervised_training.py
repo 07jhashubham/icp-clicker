@@ -190,16 +190,41 @@ def bayesian_update(ur_values, fe_values):
     """
     Compute posterior probabilities using Bayesian update.
     """
+    epsilon = 1e-6  # Small value to avoid zeros
+
     # Normalize UR and FE values
-    scaler = MinMaxScaler()
-    ur_values = scaler.fit_transform(np.array(ur_values).reshape(-1,1)).flatten()
-    fe_values = scaler.fit_transform(np.array(fe_values).reshape(-1,1)).flatten()
-    
+    ur_values = np.array(ur_values).reshape(-1)
+    fe_values = np.array(fe_values).reshape(-1)
+
+    # Handle case when all values are the same
+    if np.max(ur_values) == np.min(ur_values):
+        ur_values_normalized = np.full(ur_values.shape, 0.5)
+    else:
+        scaler = MinMaxScaler()
+        ur_values_normalized = scaler.fit_transform(ur_values.reshape(-1, 1)).flatten()
+
+    if np.max(fe_values) == np.min(fe_values):
+        fe_values_normalized = np.full(fe_values.shape, 0.5)
+    else:
+        scaler = MinMaxScaler()
+        fe_values_normalized = scaler.fit_transform(fe_values.reshape(-1, 1)).flatten()
+
+    # Add epsilon to avoid zeros
+    ur_values_normalized = ur_values_normalized * (1 - 2 * epsilon) + epsilon
+    fe_values_normalized = fe_values_normalized * (1 - 2 * epsilon) + epsilon
+
     # Prior and Likelihood
-    prior = ur_values
-    likelihood = fe_values
+    prior = ur_values_normalized
+    likelihood = fe_values_normalized
     posterior = prior * likelihood
-    posterior /= np.sum(posterior)  # Normalize to sum to 1
+    sum_posterior = np.sum(posterior)
+
+    if sum_posterior == 0 or np.isnan(sum_posterior):
+        # Assign equal probability if sum is zero or NaN
+        posterior = np.full_like(posterior, 1.0 / len(posterior))
+    else:
+        posterior /= sum_posterior  # Normalize to sum to 1
+
     return posterior
 
 def platt_scaling(scores, labels):
@@ -244,7 +269,7 @@ def main():
         # Extract bounding boxes from the annotation
         boxes = [annotation[f'bbox{i}'] for i in range(1, 5)]
         # Example inputs
-        user_ratings = [4.5, 4.0, 4.8, 2.0]  # Ratings from 0 to 5
+        user_ratings = [2.5,2.5,2.5,2.5,]  # Ratings from 0 to 5
 
         # Step 1: Remove outliers
         boxes_inliers = remove_outliers(boxes)
