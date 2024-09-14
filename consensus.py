@@ -72,12 +72,14 @@ def update_annotations_with_consensus(file_name):
     
     # Process annotations
     updated_data = process_annotations(data)
+
+    print(updated_data)
     
     # Save the updated JSON file
-    with open('updated_' + file_name, 'w') as f:
-        json.dump(updated_data, f, indent=4)
+    # with open('updated_' + file_name, 'w') as f:
+    #     json.dump(updated_data, f, indent=4)
     
-    print(f"Updated annotations saved to updated_{file_name}")
+    # print(f"Updated annotations saved to updated_{file_name}")
 
 # Call the function with the file name
-update_annotations_with_consensus('modified_annotations_with_outliers.json')
+update_annotations_with_consensus('full_anotation.json')

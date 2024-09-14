@@ -291,6 +291,57 @@ def load_image(image_folder, file_name):
     if image is None:
         raise ValueError(f"Image {file_name} not found in {image_folder}")
     return image
+def visualize_bounding_boxes(image, user_boxes, predicted_box, output_path, image_name):
+    """
+    Draws user-submitted and predicted bounding boxes on the image and saves it.
+
+    Parameters:
+        image (numpy.ndarray): The original image.
+        user_boxes (list): List of user-submitted bounding boxes [x, y, w, h].
+        predicted_box (list or numpy.ndarray): The predicted bounding box [x, y, w, h].
+        output_path (str): Directory where the visualized image will be saved.
+        image_name (str): The name of the image file.
+    """
+    # Create a copy of the image to draw on
+    vis_image = image.copy()
+
+    # Define colors (BGR format)
+    user_box_color = (255, 0, 0)       # Blue for user boxes
+    predicted_box_color = (0, 0, 255)  # Red for predicted box
+
+    # Define thickness
+    thickness = 2
+
+    # Font settings
+    font = cv2.FONT_HERSHEY_SIMPLEX
+    font_scale = 0.5
+    font_thickness = 1
+
+    # Draw user-submitted bounding boxes
+    for idx, box in enumerate(user_boxes):
+        x, y, w, h = map(int, box)
+        top_left = (x, y)
+        bottom_right = (x + w, y + h)
+        cv2.rectangle(vis_image, top_left, bottom_right, user_box_color, thickness)
+        label = f'User Box {idx+1}'
+        cv2.putText(vis_image, label, (x, y - 10), font, font_scale, user_box_color, font_thickness, cv2.LINE_AA)
+
+    # Draw predicted bounding box
+    if predicted_box is not None:
+        x, y, w, h = map(int, predicted_box)
+        top_left = (x, y)
+        bottom_right = (x + w, y + h)
+        cv2.rectangle(vis_image, top_left, bottom_right, predicted_box_color, thickness)
+        label = 'Predicted Box'
+        cv2.putText(vis_image, label, (x, y - 10), font, font_scale, predicted_box_color, font_thickness, cv2.LINE_AA)
+
+    # Ensure output directory exists
+    os.makedirs(output_path, exist_ok=True)
+
+    # Save the visualized image
+    save_path = os.path.join(output_path, image_name)
+    cv2.imwrite(save_path, vis_image)
+    print(f"Saved visualized image to {save_path}")
 
 def main():
     image_folder = 'test'
@@ -363,17 +414,12 @@ def main():
         final_bbox = compute_final_bbox(boxes_valid, platt_values)
         print(f"Final Bounding Box: {final_bbox}")
 
-        # === Visualization Code (optional) ===
-        # Adjust visualization to use boxes_valid
-        # for box in boxes_valid:
-        #     x, y, w, h = map(int, box)
-        #     cv2.rectangle(image, (x, y), (x + w, y + h), (0, 255, 0), 2)
-        # x, y, w, h = map(int, final_bbox)
-        # cv2.rectangle(image, (x, y), (x + w, y + h), (0, 0, 255), 2)
-        # cv2.imshow('Bounding Boxes', image)
-        # cv2.waitKey(0)
-        # cv2.destroyAllWindows()
-        # === Visualization Code Ends Here ===
-
+        visualize_bounding_boxes(
+            image=image,
+            user_boxes=boxes_valid,
+            predicted_box=final_bbox,
+            output_path="visualized_output_unsupervised",
+            image_name=image_info['file_name']
+        )
 if __name__ == "__main__":
     main()
