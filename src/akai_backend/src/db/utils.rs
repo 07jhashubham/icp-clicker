@@ -35,6 +35,15 @@ pub fn create_tables_if_not_exist() -> Result<()> {
                     owner VARCHAR NOT NULL,
                     FOREIGN KEY (owner) REFERENCES User(wallet_address)
                 );
+                
+                -- Create Powerups table
+                CREATE TABLE Powerups (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT NOT NULL,
+                    type TEXT NOT NULL CHECK(type IN ('Spawner', 'ClickMultiplier', 'AutoFiller', 'AlienMultiplier')),
+                    owner VARCHAR NOT NULL,
+                    FOREIGN KEY (owner) REFERENCES User(wallet_address)
+                );
+
 
                 -- Create Task table
                 CREATE TABLE Task (

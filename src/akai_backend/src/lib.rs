@@ -1,4 +1,5 @@
 use std::{env, time::Duration};
+use crate::db::powerups::PowerupType;
 
 use crate::db::task::TaskType;
 use backup::sync::backup;
