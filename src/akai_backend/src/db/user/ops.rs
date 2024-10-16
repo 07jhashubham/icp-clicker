@@ -26,18 +26,14 @@ pub fn create_new_user(
             clicks,
             email,
             twitter,
-            instagram,
-            exp,
-            rating
+            instagram
         ) VALUES (
             ?1,    -- name
             ?2,    -- wallet_address
             0,    -- clicks
             ?3,    -- email
             ?4,    -- twitter or NULL
-            ?5,    -- instagram
-            0,    -- exp
-            0
+            ?5    -- instagram
         );
         ",
             params![name, wallet_address, email, twitter, instagram,],

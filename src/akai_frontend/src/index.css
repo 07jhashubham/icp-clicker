@@ -1,3 +1,125 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html {
+  overflow: hidden;
+}
+
+body {
+  background-image: linear-gradient(
+      to top,
+      rgba(23, 23, 23, 1),
+      rgba(255, 255, 255, 0)
+    ),
+    /* Gradient fading upwards */ url("/store.png"), url("/Backgoround.png");
+  background-position: bottom, bottom, center;
+  background-size: 100% auto, 80% auto, cover;
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  min-height: 100vh; /* Ensures full page height */
+  margin: 0; /* Remove default margin */
+  padding: 0; /* Remove default padding */
+  font-family: sans-serif; /* Optional: Add a font */
+}
+
+.user-panel {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 80px;
+  z-index: 1000; /* Keep it on top */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.user-panel-image {
+  width: 100%;
+  height: auto; /* Keep the image aspect ratio */
+}
+
+.user-panel-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* Center the text on the image */
+  color: white; /* Change the text color to be visible */
+  font-size: 24px; /* Adjust text size */
+}
+
+.user-panel-text h1 {
+  margin: 0;
+  font-size: 2rem; /* Adjust heading size */
+}
+
+.user-panel-text p {
+  font-size: 1rem; /* Adjust paragraph size */
+  margin: 0;
+}
+
+/* Default bloom effect */
+.glow-effect {
+  text-shadow: 0 0 10px rgba(255, 255, 0, 0.8), 0 0 20px rgba(255, 255, 0, 0.6),
+    0 0 30px rgba(255, 255, 0, 0.4), 0 0 40px rgba(255, 255, 0, 0.3);
+  filter: blur(0.5px);
+  transition: text-shadow 0.3s ease, filter 0.3s ease; /* Smooth transition */
+}
+
+/* On hover, stop the bloom effect */
+.glow-effect:hover {
+  text-shadow: none; /* Remove the shadow */
+  filter: none; /* Remove any blur effect */
+}
+
+.incubator-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  margin-top: 70px;
+}
+
+.incubator-fill {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+}
+
+.side-panel-container {
+  position: fixed;
+  top: 30%;
+  left: 0;
+  transform: translateY(-50%);
+  width: 120px; /* Adjust as per your need */
+  border-radius: 0 10px 10px 0;
+  padding: 10px;
+}
+
+.check-image {
+  width: 100%;
+  height: auto;
+  margin-bottom: 10px;
+}
+
+.responsive-image {
+  max-height: 60vh; /* Default height for larger screens */
+}
+@media (max-width: 400px) {
+  .responsive-image {
+    max-height: 60vh; /* Height for screens 400px and below */
+  }
+}
+@media (max-width: 390px) {
+  .responsive-image {
+    max-height: 50vh; /* Height for screens 390px and below */
+  }
+}
+@media (max-width: 380px) {
+  .responsive-image {
+    max-height: 40vh; /* Height for screens 380px and below */
+  }
+}

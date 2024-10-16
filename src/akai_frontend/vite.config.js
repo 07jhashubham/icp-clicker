@@ -12,12 +12,6 @@ export default defineConfig({
     rollupOptions: {
       external: [
         "react-router-dom",
-        "@mui/material",
-        "@mui/icons-material/Twitter",
-        "@mui/icons-material/Instagram",
-        "@mui/icons-material/LinkedIn",
-        "@mui/icons-material/Telegram",
-        "@mui/icons-material/Wallpaper",
       ],
     },
   },

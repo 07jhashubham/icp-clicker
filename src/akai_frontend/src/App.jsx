@@ -1,18 +1,13 @@
-import React, { useState } from "react";
-import { BrowserRouter as Router, Route, Routes, Link } from "react-router-dom";
-import "./App.css";
 import Clicker from "./components/Clicker";
 import Merging from "./components/Merging";
-import Task from "./components/Task";
-import Person from "./components/Person";
-
-import sawGif from "./images/saw.gif";
-import playgroundGif from "./images/Playground.gif";
-import personGif from "./images/Person.gif";
-import ImageLabeler from "./components/ImageLabeler";
-export default function App() {
+import SidePanel from "./components/SidePannel";
+import UserProfile from "./components/UserProfile";
+import { useState } from "react";
+import './index.css'
+function App() {
   const [clickCount, setClickCount] = useState(0);
   const [boxes, setBoxes] = useState([]);
+  const [selectedIcon, setSelectedIcon] = useState("home"); // Default to home icon
 
   const handleClick = () => {
     setClickCount((value) => {
@@ -28,35 +23,137 @@ export default function App() {
     });
   };
 
+  // Function to handle icon click
+  const handleIconClick = (icon) => {
+    setSelectedIcon(icon); // Set the selected icon state
+  };
+
   return (
-    <Router>
-      <div className="content">
-        <Routes>
-          <Route
-            path="/"
-            element={
-              <>
-                <Clicker clickCount={clickCount} handleClick={handleClick} />
-                <Merging boxes={boxes} setBoxes={setBoxes} />
-              </>
-            }
+    <>
+      {/* Conditionally render components based on selectedIcon */}
+      {selectedIcon === "home" && (
+        <>
+          <UserProfile />
+          <Clicker clickCount={clickCount} handleClick={handleClick} />
+          <SidePanel />
+          <Merging boxes={boxes} setBoxes={setBoxes} />
+        </>
+      )}
+
+      {/* Footer section */}
+      <div
+        className="footer-container"
+        style={{
+          position: "fixed",
+          bottom: 0,
+          width: "100%",
+          backgroundImage: "url('/Group35.png')", // Ensure the correct path
+          backgroundSize: "cover",
+          backgroundPosition: "center",
+          height: "80px", // Adjust height as necessary
+          display: "flex",
+          justifyContent: "space-around",
+          alignItems: "center",
+        }}
+      >
+        {/* Profile icon */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+          onClick={() => handleIconClick("profile")}
+        >
+          <img
+            src="/profile.png"
+            alt="Profile"
+            style={{
+              width: "40px", // Adjust size as necessary
+              height: "auto",
+              zIndex: 2,
+            }}
           />
-          <Route path="/task" element={<Task />} />
-          <Route path="/person" element={<Person />} />
-          <Route path="/image-label" element={<ImageLabeler />} />
-        </Routes>
-        <div className="bottom-navigation flex flex-row justify-between items-center w-80 px-4 py-2 fixed bottom-0 ">
-          <Link to="/task">
-            <img src={sawGif} alt="Home" className="h-12" />
-          </Link>
-          <Link to="/">
-            <img src={playgroundGif} alt="Task" className="h-20" />
-          </Link>
-          <Link to="/person">
-            <img src={personGif} alt="Connect" className="h-12" />
-          </Link>
+          {/* Conditionally render hover image under profile */}
+          {selectedIcon === "profile" && (
+            <img
+              src="/hover.png"
+              alt="Hover"
+              style={{
+                width: "40px", // Adjust size as necessary
+                height: "auto",
+                marginTop: "5px", // Space between profile and hover image
+              }}
+            />
+          )}
+        </div>
+
+        {/* Home icon */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+          onClick={() => handleIconClick("home")}
+        >
+          <img
+            src="/home.png"
+            alt="Home"
+            style={{
+              width: "40px", // Adjust size as necessary
+              height: "auto",
+              zIndex: 2,
+            }}
+          />
+          {/* Conditionally render hover image under home */}
+          {selectedIcon === "home" && (
+            <img
+              src="/hover.png"
+              alt="Hover"
+              style={{
+                width: "40px", // Adjust size as necessary
+                height: "auto",
+                marginTop: "5px", // Space between home and hover image
+              }}
+            />
+          )}
+        </div>
+
+        {/* Task icon */}
+        <div
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            alignItems: "center",
+          }}
+          onClick={() => handleIconClick("task")}
+        >
+          <img
+            src="/task.png"
+            alt="Task"
+            style={{
+              width: "40px", // Adjust size as necessary
+              height: "auto",
+              zIndex: 2,
+            }}
+          />
+          {/* Conditionally render hover image under task */}
+          {selectedIcon === "task" && (
+            <img
+              src="/hover.png"
+              alt="Hover"
+              style={{
+                width: "40px", // Adjust size as necessary
+                height: "auto",
+                marginTop: "5px", // Space between task and hover image
+              }}
+            />
+          )}
         </div>
       </div>
-    </Router>
+    </>
   );
 }
+
+export default App;
