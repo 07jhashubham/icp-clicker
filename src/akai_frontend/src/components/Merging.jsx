@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 
 //chaneg to alien list functionality
 const alienImages = [
@@ -11,7 +11,24 @@ const alienImages = [
 
 export default function Merging({ boxes, setBoxes, exp, clicks }) {
   const [draggingBox, setDraggingBox] = useState(null);
-  const [lineFillPercentage, setLineFillPercentage] = useState(30); // You can dynamically update this state based on any logic
+  const [lineFillPercentageExp, setLineFillPercentageExp] = useState(0);
+  const [lineFillPercentageClicks, setLineFillPercentageClicks] = useState(0);
+
+  // Maximum value for experience, assuming 300 as the maximum level
+  const maxExp = 69;
+  const maxClicks = 29; // Adjust this value based on the logic of your game
+
+
+  useEffect(() => {
+    const fillPercentage = (exp / maxExp) * 100;
+    setLineFillPercentageExp(fillPercentage);
+  }, [exp]);
+
+  // Update line fill percentage for clicks
+  useEffect(() => {
+    const fillPercentage = (clicks / maxClicks) * 100;
+    setLineFillPercentageClicks(fillPercentage);
+  }, [clicks]);
 
   const placeholders = Array.from({ length: 12 });
 
@@ -178,7 +195,7 @@ export default function Merging({ boxes, setBoxes, exp, clicks }) {
                 position: "absolute",
                 top: 0,
                 left: 0,
-                width: `${lineFillPercentage}%`, // Dynamically update width based on state
+                width: `${lineFillPercentageExp}%`, // Dynamically update width based on state
                 height: "100%",
                 objectFit: "cover",
               }}
@@ -277,16 +294,30 @@ export default function Merging({ boxes, setBoxes, exp, clicks }) {
               marginLeft: "10px", // Space between Vector.png and the right content
             }}
           >
-            {/* Black Line */}
-            <div
+          <div
+            style={{
+              position: "relative", // To make line6.png absolutely positioned inside
+              width: "100%",
+              height: "2px",
+              backgroundColor: "black",
+              marginTop: "5px", // Space between row and line
+              overflow: "hidden", // Hide the overflowing part of the fill image
+            }}
+          >
+            {/* line6.png to represent filling */}
+            <img
+              src="Line6.png"
+              alt="Line Fill"
               style={{
-                width: "100%",
-                height: "2px",
-                backgroundColor: "black",
-                marginBottom: "5px", // Space between line and text
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: `${lineFillPercentageClicks}%`, // Dynamically update width based on state
+                height: "100%",
+                objectFit: "cover",
               }}
-            ></div>
-
+            />
+          </div>
             {/* Yellow text */}
             <p
               className=" text-white font-mono"

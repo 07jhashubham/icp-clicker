@@ -3,7 +3,7 @@ use crate::db::powerups::PowerupType;
 
 use crate::db::task::TaskType;
 use backup::sync::backup;
-use db::{task::ops::settle_tasks, utils::create_tables_if_not_exist};
+use db::{task::ops::settle_tasks, user::ops::create_new_user, utils::create_tables_if_not_exist};
 use dotenv::dotenv;
 use ic_cdk::spawn;
 use ic_cdk_timers::set_timer_interval;
@@ -42,6 +42,13 @@ fn init() {
     dotenv().ok();
     create_tables_if_not_exist().unwrap();
 
+    // FOR TESTING PURPOSES
+    create_new_user("user1234".to_string(), None, None, None, None).unwrap();
+
+
+
+
+    
     if *COMMIT_BACKUPS && *BACKUP_DURATION > 0 {
         set_timer_interval(Duration::from_secs(*BACKUP_DURATION), || spawn(backup()));
     }
