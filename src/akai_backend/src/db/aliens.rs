@@ -8,7 +8,7 @@ use serde_json::json;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub struct Alien {
-    pub id: String,
+    pub id: i32,
     pub lvl: usize,
 }
 
@@ -50,12 +50,16 @@ impl Add for Alien {
 // returns a list of aliens create with their sqlite id and lvl
 #[update]
 pub fn spawn_aliens(wallet_address: String, slots: usize) -> Result<String, String> {
+    let occupied_slots: Vec<Alien> = serde_json::from_str(&get_aliens(wallet_address.clone())?).map_err(|e| e.to_string())?;
+    if occupied_slots.len() > 12{
+        return Err("You have reached the maximum number of aliens".to_string());
+    }
     let mut conn = CONN.lock().map_err(|e| e.to_string())?;
     let tx = conn.transaction().map_err(|e| e.to_string())?;
     let mut inserted_ids = Vec::with_capacity(slots);
     {
         let mut stmt = tx
-            .prepare("INSERT INTO Alien (lvl, owner) VALUES (?1, ?2)")
+            .prepare("INSERT INTO Aliens (lvl, owner) VALUES (?1, ?2)")
             .map_err(|e| e.to_string())?;
 
         for _ in 0..slots {
@@ -86,4 +90,25 @@ pub fn combine_aliens(a: String, b: String) -> Result<String, String> {
     let ret = (a_alien + b_alien)?;
 
     serde_json::to_string(&ret).map_err(|e| e.to_string())
+}
+
+#[update]
+pub fn get_aliens(wallet_address: String) -> Result<String, String> {
+    let conn = CONN.lock().map_err(|e| e.to_string())?;
+    let mut stmt = conn
+        .prepare("SELECT id, lvl FROM Aliens WHERE owner = ?1")
+        .map_err(|e| e.to_string())?;
+
+    let aliens = stmt
+        .query_map(params![wallet_address], |row| {
+            Ok(Alien {
+                id: row.get(0)?,
+                lvl: row.get(1)?,
+            })
+        })
+        .map_err(|e| e.to_string())?
+        .collect::<Result<Vec<_>, _>>()
+        .map_err(|e| e.to_string())?;
+
+    serde_json::to_string(&aliens).map_err(|e| e.to_string())
 }

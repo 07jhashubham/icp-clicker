@@ -9,7 +9,7 @@ const alienImages = [
   // Add more paths as necessary
 ];
 
-export default function Merging({ boxes, setBoxes }) {
+export default function Merging({ boxes, setBoxes, exp, clicks }) {
   const [draggingBox, setDraggingBox] = useState(null);
   const [lineFillPercentage, setLineFillPercentage] = useState(30); // You can dynamically update this state based on any logic
 
@@ -32,6 +32,7 @@ export default function Merging({ boxes, setBoxes }) {
 
     if (draggedBox && droppedBox && draggedBox.level === droppedBox.level) {
       const newLevel = draggedBox.level + 1;
+
       setBoxes((prevBoxes) =>
         prevBoxes
           .filter(
@@ -39,7 +40,11 @@ export default function Merging({ boxes, setBoxes }) {
           )
           .concat({ level: newLevel, index: dropIndex })
       );
+
+      // Update backend with merged alien
+      updateAlienOnBackend(draggedBox.id, droppedBox.id, newLevel);
     }
+
     setDraggingBox(null); // Reset dragging box
   };
 
@@ -150,7 +155,7 @@ export default function Merging({ boxes, setBoxes }) {
                 margin: "0",
               }}
             >
-              40/300
+              {exp}
             </p>
           </div>
 
@@ -290,7 +295,7 @@ export default function Merging({ boxes, setBoxes }) {
                 margin: "0",
               }}
             >
-              200/500
+              {clicks}
             </p>
           </div>
         </div>

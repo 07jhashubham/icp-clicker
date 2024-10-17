@@ -101,12 +101,16 @@ fn increment_field(
     Ok(())
 }
 
+#[update]
 pub(crate) fn update_clicks(
     wallet_address: String,
     amt: usize,
-    tx: &ic_sqlite_features::Transaction<'_>,
 ) -> Result<(), String> {
-    increment_field(wallet_address, "clicks", amt, tx)
+    let mut conn = CONN.lock().map_err(|err| format!("{}", err))?;
+    let tx = conn.transaction().map_err(|err| format!("{}", err))?;
+    increment_field(wallet_address, "clicks", amt, &tx)?;
+    tx.commit().map_err(|err| format!("{}", err))?;
+    Ok(())
 }
 pub(crate) fn update_exp(
     wallet_address: String,
@@ -162,4 +166,17 @@ pub fn user_exists(wallet_address: &str) -> Result<bool, String> {
         .map_err(|e| format!("{}", e))?;
 
     Ok(count > 0)
+}
+
+#[update]
+fn reset_clicks(wallet_address: String) -> Result<(), String> {
+    let mut conn = CONN.lock().map_err(|err| format!("{}", err))?;
+    let tx = conn.transaction().map_err(|err| format!("{}", err))?;
+    tx.execute(
+        "UPDATE User SET clicks = 0 WHERE wallet_address = ?1",
+        params![wallet_address],
+    )
+    .map_err(|err| format!("{}", err))?;
+    tx.commit().map_err(|err| format!("{}", err))?;
+    Ok(())
 }
