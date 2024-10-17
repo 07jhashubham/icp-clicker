@@ -44,46 +44,46 @@ pub fn create_new_user(
     Ok(())
 }
 
-fn update_user_field<T>(wallet_address: String, field: &str, value: T) -> Result<(), String>
-where
-    T: ToSql,
-{
-    // if !user_exists(&wallet_address)? {
-    //     return Err(format!("User doesnt exist for wallet {}", wallet_address));
-    // }
-    let query = format!("UPDATE User SET {} = ?1 WHERE wallet_address = ?2;", field);
+// fn update_user_field<T>(wallet_address: String, field: &str, value: T) -> Result<(), String>
+// where
+//     T: ToSql,
+// {
+//     // if !user_exists(&wallet_address)? {
+//     //     return Err(format!("User doesnt exist for wallet {}", wallet_address));
+//     // }
+//     let query = format!("UPDATE User SET {} = ?1 WHERE wallet_address = ?2;", field);
 
-    let mut conn = CONN.lock().map_err(|err| format!("{}", err))?;
+//     let mut conn = CONN.lock().map_err(|err| format!("{}", err))?;
 
-    let tx = conn.transaction().map_err(|e| format!("{}", e))?;
+//     let tx = conn.transaction().map_err(|e| format!("{}", e))?;
 
-    tx.execute(&query, params![value, wallet_address])
-        .map_err(|err| format!("{}", err))?;
+//     tx.execute(&query, params![value, wallet_address])
+//         .map_err(|err| format!("{}", err))?;
 
-    tx.commit().map_err(|e| format!("{}", e))?;
+//     tx.commit().map_err(|e| format!("{}", e))?;
 
-    Ok(())
-}
+//     Ok(())
+// }
 
-#[update]
-pub fn update_email(wallet_address: String, email: String) -> Result<(), String> {
-    update_user_field(wallet_address, "email", email)
-}
+// #[update]
+// pub fn update_email(wallet_address: String, email: String) -> Result<(), String> {
+//     update_user_field(wallet_address, "email", email)
+// }
 
-#[update]
-pub fn update_twitter(wallet_address: String, twitter: String) -> Result<(), String> {
-    update_user_field(wallet_address, "twitter", twitter)
-}
+// #[update]
+// pub fn update_twitter(wallet_address: String, twitter: String) -> Result<(), String> {
+//     update_user_field(wallet_address, "twitter", twitter)
+// }
 
-#[update]
-pub fn update_instagram(wallet_address: String, instagram: String) -> Result<(), String> {
-    update_user_field(wallet_address, "instagram", instagram)
-}
+// #[update]
+// pub fn update_instagram(wallet_address: String, instagram: String) -> Result<(), String> {
+//     update_user_field(wallet_address, "instagram", instagram)
+// }
 
-#[update]
-pub fn update_name(wallet_address: String, name: Option<String>) -> Result<(), String> {
-    update_user_field(wallet_address, "name", name)
-}
+// #[update]
+// pub fn update_name(wallet_address: String, name: Option<String>) -> Result<(), String> {
+//     update_user_field(wallet_address, "name", name)
+// }
 
 fn increment_field(
     wallet_address: String,
@@ -112,21 +112,21 @@ pub(crate) fn update_clicks(
     tx.commit().map_err(|err| format!("{}", err))?;
     Ok(())
 }
-pub(crate) fn update_exp(
-    wallet_address: String,
-    amt: usize,
-    tx: &ic_sqlite_features::Transaction<'_>,
-) -> Result<(), String> {
-    increment_field(wallet_address, "exp", amt, tx)
-}
+// pub(crate) fn update_exp(
+//     wallet_address: String,
+//     amt: usize,
+//     tx: &ic_sqlite_features::Transaction<'_>,
+// ) -> Result<(), String> {
+//     increment_field(wallet_address, "exp", amt, tx)
+// }
 
-pub(crate) fn update_rating(
-    wallet_address: String,
-    amt: usize,
-    tx: &ic_sqlite_features::Transaction<'_>,
-) -> Result<(), String> {
-    increment_field(wallet_address, "rating", amt, tx)
-}
+// pub(crate) fn update_rating(
+//     wallet_address: String,
+//     amt: usize,
+//     tx: &ic_sqlite_features::Transaction<'_>,
+// ) -> Result<(), String> {
+//     increment_field(wallet_address, "rating", amt, tx)
+// }
 
 #[query]
 pub fn get_user_data(wallet_address: String) -> Result<String, String> {
@@ -155,18 +155,18 @@ pub fn get_user_data(wallet_address: String) -> Result<String, String> {
     }
 }
 
-pub fn user_exists(wallet_address: &str) -> Result<bool, String> {
-    let conn = CONN.lock().map_err(|x| format!("{}", x))?;
-    let count: i64 = conn
-        .query_row(
-            "SELECT COUNT(*) FROM User WHERE wallet_address = ?1",
-            [wallet_address],
-            |row| row.get(0),
-        )
-        .map_err(|e| format!("{}", e))?;
+// pub fn user_exists(wallet_address: &str) -> Result<bool, String> {
+//     let conn = CONN.lock().map_err(|x| format!("{}", x))?;
+//     let count: i64 = conn
+//         .query_row(
+//             "SELECT COUNT(*) FROM User WHERE wallet_address = ?1",
+//             [wallet_address],
+//             |row| row.get(0),
+//         )
+//         .map_err(|e| format!("{}", e))?;
 
-    Ok(count > 0)
-}
+//     Ok(count > 0)
+// }
 
 #[update]
 fn reset_clicks(wallet_address: String) -> Result<(), String> {

@@ -12,41 +12,41 @@ pub struct Alien {
     pub lvl: usize,
 }
 
-impl Add for Alien {
-    type Output = Result<Self, String>;
+// impl Add for Alien {
+//     type Output = Result<Self, String>;
 
-    fn add(self, rhs: Self) -> Self::Output {
-        if self.lvl != rhs.lvl {
-            return Err("Can't combine aliens with different levels or owners".to_string());
-        }
+//     fn add(self, rhs: Self) -> Self::Output {
+//         if self.lvl != rhs.lvl {
+//             return Err("Can't combine aliens with different levels or owners".to_string());
+//         }
 
-        let mut conn = CONN.lock().map_err(|e| e.to_string())?;
+//         let mut conn = CONN.lock().map_err(|e| e.to_string())?;
 
-        let tx = conn.transaction().map_err(|e| e.to_string())?;
+//         let tx = conn.transaction().map_err(|e| e.to_string())?;
 
-        tx.execute_batch(&format!(
-            "
-            BEGIN;
+//         tx.execute_batch(&format!(
+//             "
+//             BEGIN;
             
-            UPDATE Aliens
-            SET lvl = lvl + 1
-            WHERE id = {}';
+//             UPDATE Aliens
+//             SET lvl = lvl + 1
+//             WHERE id = {}';
             
-            DELETE FROM Aliens
-            WHERE id = '{}';
+//             DELETE FROM Aliens
+//             WHERE id = '{}';
             
-            COMMIT;
-        ",
-            self.id, rhs.id
-        ))
-        .map_err(|e| e.to_string())?;
+//             COMMIT;
+//         ",
+//             self.id, rhs.id
+//         ))
+//         .map_err(|e| e.to_string())?;
 
-        Ok(Alien {
-            id: self.id,
-            lvl: self.lvl + 1,
-        })
-    }
-}
+//         Ok(Alien {
+//             id: self.id,
+//             lvl: self.lvl + 1,
+//         })
+//     }
+// }
 // returns a list of aliens create with their sqlite id and lvl
 #[update]
 pub fn spawn_aliens(wallet_address: String, slots: usize) -> Result<String, String> {
@@ -81,16 +81,16 @@ fn get_random_alien() -> Result<usize, String> {
     return Ok(RandomNumberGenerator::<usize>::new().next() % 5usize + 1); // basically gets any number from 1 to 5 levels
 }
 // Note: lhs alien persists while the rhs alien gets deleted, MUST simulate the same in the frontend
-#[update]
-pub fn combine_aliens(a: String, b: String) -> Result<String, String> {
-    let a_alien: Alien = serde_json::from_str(&a).map_err(|e| e.to_string())?;
+// #[update]
+// pub fn combine_aliens(a: String, b: String) -> Result<String, String> {
+//     let a_alien: Alien = serde_json::from_str(&a).map_err(|e| e.to_string())?;
 
-    let b_alien: Alien = serde_json::from_str(&b).map_err(|e| e.to_string())?;
+//     let b_alien: Alien = serde_json::from_str(&b).map_err(|e| e.to_string())?;
 
-    let ret = (a_alien + b_alien)?;
+//     let ret = (a_alien + b_alien)?;
 
-    serde_json::to_string(&ret).map_err(|e| e.to_string())
-}
+//     serde_json::to_string(&ret).map_err(|e| e.to_string())
+// }
 
 #[update]
 pub fn get_aliens(wallet_address: String) -> Result<String, String> {

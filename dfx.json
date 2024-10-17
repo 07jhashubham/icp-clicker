@@ -1,19 +1,27 @@
 {
   "canisters": {
+    "deployer":{
+      "candid": "src/deployer/deployer.did",
+      "package": "deployer",
+      "type": "rust"
+    },
     "akai_backend": {
       "candid": "src/akai_backend/akai_backend.did",
       "package": "akai_backend",
-      "type": "rust"
+      "type": "rust",
+      "optimize": "size",
+      "gzip": true
     },
     "akai_frontend": {
       "dependencies": [
-        "akai_backend"
+        "deployer"
       ],
       "source": [
         "src/akai_frontend/dist"
       ],
       "type": "assets",
-      "workspace": "akai_frontend"
+      "workspace": "akai_frontend",
+      "gzip": true
     }
   },
   "defaults": {

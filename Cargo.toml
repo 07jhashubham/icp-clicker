@@ -1,5 +1,5 @@
 [workspace]
 members = [
-    "src/akai_backend"
-]
+    "src/akai_backend","src/deployer"
+, "src/uploader"]
 resolver = "2"
