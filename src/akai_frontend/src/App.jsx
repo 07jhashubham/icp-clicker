@@ -254,6 +254,7 @@ function App() {
             setBoxes={setBoxes}
             clicks={user?.clicks}
             exp={user?.exp}
+            refetchBoxes={refetchAliens}
           />
         </>
       )}

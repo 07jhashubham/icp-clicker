@@ -1,5 +1,9 @@
 import React, { useEffect, useState } from "react";
-
+import { DndProvider, useDrag, useDrop } from "react-dnd";
+import { HTML5Backend } from "react-dnd-html5-backend";
+import { TouchBackend } from "react-dnd-touch-backend";
+import { isMobile } from "react-device-detect";
+import { useUpdateCall } from "@ic-reactor/react";
 //chaneg to alien list functionality
 const alienImages = [
   "alien-1.png",
@@ -8,82 +12,139 @@ const alienImages = [
   "alien-4.png",
 ];
 
-export default function Merging({ boxes, setBoxes, exp, clicks }) {
-  const [draggingBox, setDraggingBox] = useState(null);
+const ItemType = "ALIEN";
+
+function AlienBox({ box, index, onDrop }) {
+  const [{ isDragging }, dragRef] = useDrag({
+    type: ItemType,
+    item: { index },
+    collect: (monitor) => ({
+      isDragging: monitor.isDragging(),
+    }),
+  });
+
+  const [{ isOver }, dropRef] = useDrop({
+    accept: ItemType,
+    drop: (item) => {
+      onDrop(item.index, index);
+    },
+    collect: (monitor) => ({
+      isOver: monitor.isOver(),
+    }),
+  });
+
+  return (
+    <div
+      ref={(node) => dragRef(dropRef(node))} // Combine refs
+      data-index={index}
+      className="alien-box"
+      style={{
+        width: "90px",
+        height: "55px",
+        backgroundColor: isOver ? "lightblue" : "transparent",
+        display: "flex",
+        justifyContent: "center",
+        alignItems: "center",
+        borderRadius: "10px",
+        position: "relative",
+        opacity: isDragging ? 0.5 : 1,
+      }}
+    >
+      <img
+        src="box.png"
+        alt="Container"
+        style={{
+          width: "100%",
+          height: "100%",
+          position: "absolute",
+          top: 0,
+          left: 0,
+          zIndex: 1,
+          objectFit: "contain",
+        }}
+      />
+      {box && (
+        <img
+          src={alienImages[box.level - 1]}
+          alt={`Alien ${box.level}`}
+          style={{
+            width: "80%",
+            height: "70%",
+            objectFit: "contain",
+            zIndex: 2,
+          }}
+        />
+      )}
+    </div>
+  );
+}
+
+
+export default function Merging({ boxes, setBoxes, exp, clicks, refetchBoxes }) {
   const [lineFillPercentageExp, setLineFillPercentageExp] = useState(0);
   const [lineFillPercentageClicks, setLineFillPercentageClicks] = useState(0);
 
+  const { call: combine_aliens } = useUpdateCall({
+    functionName: "combine_aliens",
+    // Removed args to allow dynamic arguments
+  });
+  
   // Maximum value for experience, assuming 300 as the maximum level
   const maxExp = 69;
   const maxClicks = 29; // Adjust this value based on the logic of your game
-
+  
   useEffect(() => {
     const fillPercentage = (exp / maxExp) * 100;
     setLineFillPercentageExp(fillPercentage);
   }, [exp]);
-
+  
   // Update line fill percentage for clicks
   useEffect(() => {
     const fillPercentage = (clicks / maxClicks) * 100;
     setLineFillPercentageClicks(fillPercentage);
   }, [clicks]);
-
+  
   const placeholders = Array.from({ length: 12 });
-
-  const handleDragStart = (e, index) => {
-    e.dataTransfer.setData("text/plain", index);
-    setDraggingBox(index);
-  };
-
-  const handleTouchStart = (e, index) => {
-    setDraggingBox(index);
-  };
-
-  const handleDrop = (e, dropIndex) => {
-    e.preventDefault();
-    const dragIndex = e.dataTransfer?.getData("text/plain") || draggingBox;
-    const draggedBox = boxes.find((b) => b.index === parseInt(dragIndex));
+  
+  // Updated handleDrop function
+  const handleDrop = (dragIndex, dropIndex) => {
+    const draggedBox = boxes.find((b) => b.index === dragIndex);
     const droppedBox = boxes.find((b) => b.index === dropIndex);
-
+  
     if (draggedBox && droppedBox && draggedBox.level === droppedBox.level) {
       const newLevel = draggedBox.level + 1;
-
-      setBoxes((prevBoxes) =>
-        prevBoxes
-          .filter(
-            (b) => b.index !== parseInt(dragIndex) && b.index !== dropIndex
-          )
-          .concat({ level: newLevel, index: dropIndex })
-      );
-
-      // Update backend with merged alien
-      updateAlienOnBackend(draggedBox.id, droppedBox.id, newLevel);
-    }
-
-    setDraggingBox(null); // Reset dragging box
-  };
-
-  const handleTouchMove = (e) => {
-    e.preventDefault();
-    const touchLocation = e.targetTouches[0];
-    const element = document.elementFromPoint(
-      touchLocation.clientX,
-      touchLocation.clientY
-    );
-
-    if (element && element.dataset.index) {
-      const dropIndex = parseInt(element.dataset.index);
-      if (draggingBox !== null && draggingBox !== dropIndex) {
-        handleDrop(e, dropIndex);
-      }
+  
+      // Update the state with the merged box and remove the dragged and dropped boxes
+      setBoxes((prevBoxes) => {
+        const updatedBoxes = prevBoxes
+          .filter((b) => b.index !== dragIndex && b.index !== dropIndex)
+          .concat({ level: newLevel, index: dropIndex, id: draggedBox.id }); // Place the new level alien in the dropped index
+  
+        return updatedBoxes;
+      });
+  
+      // Prepare the arguments to send to the backend
+      const argA = JSON.stringify({ lvl: draggedBox.level, id: draggedBox.id });
+      const argB = JSON.stringify({ lvl: droppedBox.level, id: droppedBox.id });
+  
+      // Call the combine_aliens function with exactly two arguments
+      combine_aliens([argA, argB])
+        .then((res) => {
+          refetchBoxes().then(() => console.log("Boxes updated:", res));
+        })
+        .catch((err) => {
+          console.error("Combine aliens failed:", err);
+        });
     }
   };
-
-  const handleDragOver = (e) => {
-    e.preventDefault();
-  };
+  const disableContextMenu = (e) => e.preventDefault();
 
   return (
+    <DndProvider
+    backend={isMobile ? TouchBackend : HTML5Backend} // Use touch backend for mobile and HTML5 backend for desktop
+    options={isMobile ? { enableMouseEvents: true } : {}}
+    >
+
     <div
       className="frame-container"
       style={{
@@ -99,6 +160,7 @@ export default function Merging({ boxes, setBoxes, exp, clicks }) {
         alignItems: "center",
         marginTop: "-60px", // Retain your original marginTop
       }}
+      onContextMenu={disableContextMenu}
     >
       {/* Adding shards.png */}
       <img
@@ -112,6 +174,7 @@ export default function Merging({ boxes, setBoxes, exp, clicks }) {
           height: "auto", // Adjust as needed for the image size
           zIndex: 0, // Ensure it's placed below other elements as needed
         }}
+        onContextMenu={disableContextMenu}
       />
 
       {/* Div for new content inside shards.png */}
@@ -134,6 +197,7 @@ export default function Merging({ boxes, setBoxes, exp, clicks }) {
             width: "40px", // Adjust size as needed
             height: "auto",
           }}
+          onContextMenu={disableContextMenu}
         />
 
         {/* Flex column div */}
@@ -160,6 +224,7 @@ export default function Merging({ boxes, setBoxes, exp, clicks }) {
                 width: "50px", // Adjust size as needed
                 height: "auto",
               }}
+              onContextMenu={disableContextMenu}
             />
             {/* 40/300 text */}
             <p
@@ -197,6 +262,7 @@ export default function Merging({ boxes, setBoxes, exp, clicks }) {
                 height: "100%",
                 objectFit: "cover",
               }}
+              onContextMenu={disableContextMenu}
             />
           </div>
         </div>
@@ -213,6 +279,7 @@ export default function Merging({ boxes, setBoxes, exp, clicks }) {
           height: "auto",
           marginTop: "75px", // Keep your original marginTop
         }}
+        onContextMenu={disableContextMenu}
       >
         <img
           src="goldRec.png"
@@ -222,6 +289,7 @@ export default function Merging({ boxes, setBoxes, exp, clicks }) {
             height: "auto",
             zIndex: 2, // Ensure it's above the background
           }}
+          onContextMenu={disableContextMenu}
         />
         {/* Add tp.png on top of goldRec.png */}
         <img
@@ -235,6 +303,7 @@ export default function Merging({ boxes, setBoxes, exp, clicks }) {
             height: "auto",
             zIndex: 3, // Ensure it's on top of goldRec
           }}
+          onContextMenu={disableContextMenu}
         />
       </div>
 
@@ -259,6 +328,7 @@ export default function Merging({ boxes, setBoxes, exp, clicks }) {
             height: "auto",
             zIndex: 2,
           }}
+          onContextMenu={disableContextMenu}
         />
 
         {/* New flex row div with Vector.png and a section with the black line and text */}
@@ -280,6 +350,7 @@ export default function Merging({ boxes, setBoxes, exp, clicks }) {
               width: "20px",
               height: "auto",
             }}
+            onContextMenu={disableContextMenu}
           />
 
           {/* Right-side content: black line and p tag */}
@@ -314,6 +385,7 @@ export default function Merging({ boxes, setBoxes, exp, clicks }) {
                   height: "100%",
                   objectFit: "cover",
                 }}
+                onContextMenu={disableContextMenu}
               />
             </div>
             {/* Yellow text */}
@@ -341,61 +413,19 @@ export default function Merging({ boxes, setBoxes, exp, clicks }) {
           alignItems: "center",
         }}
       >
-        {placeholders.map((_, index) => {
-          const box = boxes.find((b) => b.index === index);
-          return (
-            <div
-              key={index}
-              data-index={index}
-              className="alien-box"
-              style={{
-                width: "90px",
-                height: "75px",
-                backgroundColor: "transparent",
-                display: "flex",
-                justifyContent: "center",
-                alignItems: "center",
-                borderRadius: "10px",
-                position: "relative",
-                overflow: "hidden",
-              }}
-              draggable={box ? true : false}
-              onDragStart={(e) => handleDragStart(e, index)}
-              onDrop={(e) => handleDrop(e, index)}
-              onDragOver={handleDragOver}
-              onTouchStart={(e) => handleTouchStart(e, index)}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={() => setDraggingBox(null)}
-            >
-              <img
-                src="box.png"
-                alt="Container"
-                style={{
-                  width: "100%",
-                  height: "100%",
-                  position: "absolute",
-                  top: 0,
-                  left: 0,
-                  zIndex: 1,
-                  objectFit: "contain",
-                }}
+        {Array.from({ length: 12 }).map((_, index) => {
+            const box = boxes.find((b) => b.index === index);
+            return (
+              <AlienBox
+                key={index}
+                box={box}
+                index={index}
+                onDrop={handleDrop}
               />
-              {box && (
-                <img
-                  src={alienImages[box.level - 1]}
-                  alt={`Alien ${box.level}`}
-                  style={{
-                    width: "80%",
-                    height: "70%",
-                    objectFit: "contain",
-                    zIndex: 2,
-                  }}
-                />
-              )}
-            </div>
-          );
-        })}
+            );
+          })}
       </div>
     </div>
+    </DndProvider>
   );
 }

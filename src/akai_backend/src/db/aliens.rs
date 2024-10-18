@@ -22,24 +22,24 @@ impl Add for Alien {
 
         let mut conn = CONN.lock().map_err(|e| e.to_string())?;
 
+        // Start a transaction
         let tx = conn.transaction().map_err(|e| e.to_string())?;
 
-        tx.execute_batch(&format!(
-            "
-            BEGIN;
-            
-            UPDATE Aliens
-            SET lvl = lvl + 1
-            WHERE id = {}';
-            
-            DELETE FROM Aliens
-            WHERE id = '{}';
-            
-            COMMIT;
-        ",
-            self.id, rhs.id
-        ))
+        // Use parameterized queries to prevent SQL injection
+        tx.execute(
+            "UPDATE Aliens SET lvl = lvl + 1 WHERE id = ?1",
+            params![self.id],
+        )
         .map_err(|e| e.to_string())?;
+
+        tx.execute(
+            "DELETE FROM Aliens WHERE id = ?1",
+            params![rhs.id],
+        )
+        .map_err(|e| e.to_string())?;
+
+        // Commit the transaction
+        tx.commit().map_err(|e| e.to_string())?;
 
         Ok(Alien {
             id: self.id,
