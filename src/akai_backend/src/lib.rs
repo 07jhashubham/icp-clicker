@@ -1,9 +1,9 @@
 use std::{cell::RefCell, env, time::Duration};
 use crate::db::powerups::PowerupType;
 
-// use crate::db::task::TaskType;
-// use backup::sync::backup;
-use db::{user::ops::create_new_user, utils::create_tables_if_not_exist};
+use crate::db::task::TaskType;
+use backup::sync::backup;
+use db::{task::ops::settle_tasks, user::ops::create_new_user, utils::create_tables_if_not_exist};
 use ic_cdk::{api::management_canister::main::{install_code, CanisterInstallMode, InstallCodeArgument}, spawn};
 use ic_cdk_timers::set_timer_interval;
 use lazy_static::lazy_static;
@@ -35,57 +35,6 @@ lazy_static! {
             .unwrap_or(3)
     };
 }
-thread_local! {
-    static CHUNKS: RefCell<Vec<Vec<u8>>> = RefCell::new(Vec::new());
-    static CHUNKS_TOTAL_SIZE: RefCell<usize> = RefCell::new(0);
-}
-
-#[ic_cdk::update]
-fn receive_wasm(data: Vec<u8>, last: bool) {
-    CHUNKS.with(|chunks| {
-        chunks.borrow_mut().push(data.clone());
-    });
-    CHUNKS_TOTAL_SIZE.with(|total_size| {
-        *total_size.borrow_mut() += data.len();
-    });
-
-    if last {
-        CHUNKS.with(|chunks| {
-            let chunks = chunks.borrow();
-            let total_size: usize = chunks.iter().map(|chunk| chunk.len()).sum();
-            let mut complete_wasm = Vec::with_capacity(total_size);
-            for chunk in chunks.iter() {
-                complete_wasm.extend_from_slice(chunk);
-            }
-
-            // Avoid blocking for too long by splitting the update in smaller tasks
-            ic_cdk::spawn(async move {
-                update_code(complete_wasm).await;
-            });
-        });
-    }
-}
-
-async fn update_code(code: Vec<u8>) {
-    let canister_id = ic_cdk::api::id();
-    let install_arg = InstallCodeArgument {
-        canister_id,
-        mode: CanisterInstallMode::Reinstall,
-        wasm_module: code,
-        arg: Vec::new(),
-    };
-
-    match install_code(install_arg).await {
-        Ok(_) => ic_cdk::println!("Code installation successful."),
-        Err(e) => {
-            CHUNKS.with(|chunks| {
-                chunks.borrow_mut().clear();
-            });
-            ic_cdk::println!("Code installation failed: {:?}", e)
-        },
-    }
-}
-
 
 #[ic_cdk::init]
 fn init() {
@@ -98,15 +47,15 @@ fn init() {
 
 
 
-    // if *COMMIT_BACKUPS && *BACKUP_DURATION > 0 {
-    //     set_timer_interval(Duration::from_secs(*BACKUP_DURATION), || spawn(backup()));
-    // }
+    if *COMMIT_BACKUPS && *BACKUP_DURATION > 0 {
+        set_timer_interval(Duration::from_secs(*BACKUP_DURATION), || spawn(backup()));
+    }
 
     // run polled settlement every 10 secs
-    // set_timer_interval(Duration::from_secs(10), || {
-    //     let future = settle_tasks();
-    //     futures::executor::block_on(future).unwrap();
-    // });
+    set_timer_interval(Duration::from_secs(10), || {
+        let future = settle_tasks();
+        futures::executor::block_on(future).unwrap();
+    });
 
     // run polled auto_scaling every 20 secs WORK IN PROGRESS
     // set_timer_interval(Duration::from_secs(20), || {

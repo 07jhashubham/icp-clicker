@@ -1,2 +1,2 @@
-// pub mod manager;
-// pub mod scale;
+pub mod manager;
+pub mod scale;
