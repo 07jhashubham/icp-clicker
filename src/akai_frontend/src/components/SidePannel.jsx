@@ -1,7 +1,7 @@
 import { useUpdateCall } from "@ic-reactor/react";
 import React from "react";
 
-export default function SidePanel({powerupBoxes, setPowerupBoxes}) {
+export default function SidePanel({ powerupBoxes, setPowerupBoxes }) {
   console.log(powerupBoxes);
 
   const { call: use_powerup } = useUpdateCall({
@@ -19,13 +19,22 @@ export default function SidePanel({powerupBoxes, setPowerupBoxes}) {
     });
   };
 
+  const disableContextMenu = (e) => {
+    e.preventDefault(); // Prevent the default context menu from appearing
+  };
+
   return (
     <div className="side-panel-container relative -ml-4">
       {/* Main Image */}
-      <img src="/check.png" alt="Check Background" className="check-image " />
-      
+      <img
+        src="/check.png"
+        alt="Check Background"
+        className="check-image"
+        onContextMenu={disableContextMenu}
+      />
+
       {/* Slots for the power-ups */}
-      <div className="side-panel-icons absolute inset-0 flex flex-col justify-center items-center space-y-4 scale-150">
+      <div className="side-panel-icons absolute inset-0 flex flex-col justify-center items-center space-y-4">
         {powerupBoxes.map((box, index) => {
           // Render the corresponding image based on the power-up type
           let powerupImage = null;
@@ -49,8 +58,9 @@ export default function SidePanel({powerupBoxes, setPowerupBoxes}) {
                 key={index}
                 src={powerupImage}
                 alt={`Powerup ${box.type}`}
-                className="w-12 h-12"
+                className="w-12 h-12 side-panel-icon"
                 onClick={() => usePowerup(index, box.id)}
+                onContextMenu={disableContextMenu}
               />
             )
           );

@@ -1,4 +1,7 @@
 export default function Clicker({ clickCount, handleClick }) {
+  const disableContextMenu = (e) => {
+    e.preventDefault(); // Prevent the default context menu from appearing
+  };
   return (
     <div
       className="incubator-container"
@@ -22,6 +25,7 @@ export default function Clicker({ clickCount, handleClick }) {
           objectFit: "contain", // Ensures the image maintains aspect ratio
         }}
         className="responsive-image" // Assigning a class for responsive styling
+        onContextMenu={disableContextMenu}
       />
       <div className="incubator-fill" />
     </div>

@@ -5,6 +5,7 @@ import SidePanel from "./components/SidePannel";
 import UserProfile from "./components/UserProfile";
 import "./index.css";
 import { useQueryCall, useUpdateCall } from "@ic-reactor/react";
+import ImageLabeler from "./components/ImageLabel";
 
 function App() {
   const [clickCount, setClickCount] = useState(0);
@@ -19,6 +20,10 @@ function App() {
     refetchOnMount: true,
   });
 
+  const disableContextMenu = (e) => {
+    e.preventDefault(); // Prevent the default context menu from appearing
+  };
+
   // Fetch aliens data (using useQueryCall)
   const {
     data: aliensData,
@@ -30,7 +35,7 @@ function App() {
     args: ["user1234"],
     refetchOnMount: true,
   });
-  
+
   const {
     data: powerupsData,
     call: refetchPowerups,
@@ -65,10 +70,48 @@ function App() {
   });
 
   useEffect(() => {
+    // Function to handle any interaction (click or back button press)
+    const handleInteraction = () => {
+      requestFullScreen(); // Request full-screen
+      window.removeEventListener("click", handleInteraction); // Remove listener after first interaction
+    };
+
+    // Function to handle back navigation and trigger full-screen again
+    const handlePopState = () => {
+      requestFullScreen();
+    };
+
+    // Listen for click events
+    window.addEventListener("click", handleInteraction);
+
+    // Listen for back/forward navigation
+    window.addEventListener("popstate", handlePopState);
+
+    // Cleanup listeners on component unmount
+    return () => {
+      window.removeEventListener("click", handleInteraction);
+      window.removeEventListener("popstate", handlePopState);
+    };
+  }, []);
+
+  const requestFullScreen = () => {
+    const elem = document.documentElement; // Target the whole document
+    if (elem.requestFullscreen) {
+      elem.requestFullscreen();
+    } else if (elem.mozRequestFullScreen) {
+      elem.mozRequestFullScreen(); // Firefox
+    } else if (elem.webkitRequestFullscreen) {
+      elem.webkitRequestFullscreen(); // Chrome, Safari and Opera
+    } else if (elem.msRequestFullscreen) {
+      elem.msRequestFullscreen(); // IE/Edge
+    }
+  };
+
+  useEffect(() => {
     if (data && data.Ok) {
       try {
         const newUser = JSON.parse(data.Ok);
-  
+
         setUser((prevUser) => {
           if (JSON.stringify(prevUser) !== JSON.stringify(newUser)) {
             return newUser;
@@ -80,19 +123,19 @@ function App() {
       }
     }
   }, [data, data?.Ok]);
-  
+
   useEffect(() => {
     if (aliensData && aliensData.Ok) {
       try {
         const newAliens = JSON.parse(aliensData.Ok);
-  
+
         // Map aliens to include 'index' and 'level'
         const mappedAliens = newAliens.map((alien, idx) => ({
           index: idx, // Assign an index for grid placement
           level: alien.lvl, // Map 'lvl' to 'level' for consistency
           id: alien.id, // Retain the 'id' if needed
         }));
-  
+
         setBoxes((prevBoxes) => {
           if (JSON.stringify(prevBoxes) !== JSON.stringify(mappedAliens)) {
             return mappedAliens;
@@ -109,14 +152,14 @@ function App() {
     if (powerupsData && powerupsData.Ok) {
       try {
         const newPowerups = JSON.parse(powerupsData.Ok);
-  
+
         // Map aliens to include 'index' and 'level'
         const mappedPowerups = newPowerups.map((powerup, idx) => ({
           index: idx, // Assign an index for grid placement
           type: powerup.type, // Map 'lvl' to 'level' for consistency
           id: powerup.id, // Retain the 'id' if needed
         }));
-  
+
         setPowerupBoxes((prevBoxes) => {
           if (JSON.stringify(prevBoxes) !== JSON.stringify(mappedPowerups)) {
             return mappedPowerups;
@@ -146,15 +189,21 @@ function App() {
           .catch((error) => {
             console.error("Failed to spawn aliens:", error);
           });
-        
-        spawn_powerup().then((response) => {
-          console.log(response);
-          refetchPowerups();
-        }).catch((error) => {
-          console.error("Failed to spawn powerup:", error);
-        });
 
-        reset_clicks().then((res) => setClickCount(0)).catch((error) => {console.error("Failed to reset clicks:", error);});
+        spawn_powerup()
+          .then((response) => {
+            console.log(response);
+            refetchPowerups();
+          })
+          .catch((error) => {
+            console.error("Failed to spawn powerup:", error);
+          });
+
+        reset_clicks()
+          .then((res) => setClickCount(0))
+          .catch((error) => {
+            console.error("Failed to reset clicks:", error);
+          });
       } else {
         newValue = value + 1;
       }
@@ -185,6 +234,10 @@ function App() {
   // Now it's safe to access 'user.clicks'
   console.log(user.clicks);
 
+  const handleIconClick = (icon) => {
+    setSelectedIcon(icon); // Set the selected icon state
+  };
+
   return (
     <>
       {/* Conditionally render components based on selectedIcon */}
@@ -192,8 +245,23 @@ function App() {
         <>
           <UserProfile user={user} />
           <Clicker clickCount={clickCount} handleClick={handleClick} />
-          <SidePanel powerupBoxes={powerupBoxes} setPowerupBoxes={setPowerupBoxes}/>
-          <Merging boxes={boxes} setBoxes={setBoxes} clicks={user?.clicks} exp={user?.exp}/>
+          <SidePanel
+            powerupBoxes={powerupBoxes}
+            setPowerupBoxes={setPowerupBoxes}
+          />
+          <Merging
+            boxes={boxes}
+            setBoxes={setBoxes}
+            clicks={user?.clicks}
+            exp={user?.exp}
+          />
+        </>
+      )}
+
+      {selectedIcon === "task" && (
+        <>
+          {/* <UserProfile /> */}
+          <ImageLabeler />
         </>
       )}
 
@@ -230,6 +298,7 @@ function App() {
               height: "auto",
               zIndex: 2,
             }}
+            onContextMenu={disableContextMenu}
           />
           {/* Conditionally render hover image under profile */}
           {selectedIcon === "profile" && (
@@ -241,6 +310,7 @@ function App() {
                 height: "auto",
                 marginTop: "5px",
               }}
+              onContextMenu={disableContextMenu}
             />
           )}
         </div>
@@ -262,6 +332,7 @@ function App() {
               height: "auto",
               zIndex: 2,
             }}
+            onContextMenu={disableContextMenu}
           />
           {/* Conditionally render hover image under home */}
           {selectedIcon === "home" && (
@@ -273,6 +344,7 @@ function App() {
                 height: "auto",
                 marginTop: "5px",
               }}
+              onContextMenu={disableContextMenu}
             />
           )}
         </div>
@@ -294,6 +366,7 @@ function App() {
               height: "auto",
               zIndex: 2,
             }}
+            onContextMenu={disableContextMenu}
           />
           {/* Conditionally render hover image under task */}
           {selectedIcon === "task" && (
@@ -305,6 +378,7 @@ function App() {
                 height: "auto",
                 marginTop: "5px",
               }}
+              onContextMenu={disableContextMenu}
             />
           )}
         </div>

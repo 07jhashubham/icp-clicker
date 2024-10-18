@@ -22,6 +22,15 @@ body {
   font-family: sans-serif; /* Optional: Add a font */
 }
 
+/* Disable text selection globally */
+* {
+  -webkit-user-select: none; /* Disable selection in Chrome/Safari */
+  -moz-user-select: none; /* Disable selection in Firefox */
+  -ms-user-select: none; /* Disable selection in IE/Edge */
+  user-select: none; /* Disable selection in modern browsers */
+}
+
+/* User Panel Styles */
 .user-panel {
   position: fixed;
   top: 0;
@@ -73,6 +82,7 @@ body {
   filter: none; /* Remove any blur effect */
 }
 
+/* Incubator Container */
 .incubator-container {
   position: relative;
   display: flex;
@@ -89,6 +99,7 @@ body {
   width: 100%;
 }
 
+/* Side Panel Container */
 .side-panel-container {
   position: fixed;
   top: 30%;
@@ -99,27 +110,68 @@ body {
   padding: 10px;
 }
 
-.check-image {
-  width: 100%;
+/* Side Panel Icons */
+/* .side-panel-icons {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+} */
+
+/* Side Panel Icon Images */
+.side-panel-icon {
+  width: 80%;
+  max-width: 70px;
   height: auto;
-  margin-bottom: 10px;
 }
 
-.responsive-image {
-  max-height: 60vh; /* Default height for larger screens */
-}
+/* Media Queries for Responsive Design */
+
+/* For small screens */
 @media (max-width: 400px) {
   .responsive-image {
     max-height: 60vh; /* Height for screens 400px and below */
   }
+
+  .side-panel-icon {
+    max-width: 50px;
+    margin-left: -20px;
+  }
+
+  .check-image {
+    width: 75%;
+    height: auto;
+  }
 }
+
 @media (max-width: 390px) {
   .responsive-image {
     max-height: 50vh; /* Height for screens 390px and below */
   }
+
+  .side-panel-icon {
+    max-width: 55px;
+    margin-left: -20px;
+  }
+  .check-image {
+    width: 75%;
+    height: auto;
+  }
 }
+
 @media (max-width: 380px) {
   .responsive-image {
     max-height: 40vh; /* Height for screens 380px and below */
+  }
+
+  .side-panel-icon {
+    max-width: 40px;
+    margin-left: -40px;
+  }
+
+  .check-image {
+    width: 55%;
+    height: auto;
   }
 }
