@@ -24,11 +24,13 @@ jobs:
           sudo apt-get install -y clang
           clang --version
 
-      # Install DFINITY dfx ICP CLI
+      # Install DFINITY dfx ICP CLI (non-interactive)
       - name: Install DFX CLI
         run: |
-          sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)"
-          echo 'export PATH="$HOME/bin:$PATH"' >> $GITHUB_ENV
+          export DFX_INSTALL_PATH="$HOME/.local/share/dfx"  # Define install path
+          export PATH="$HOME/.local/share/dfx/bin:$PATH"  # Add DFX to path
+          sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)" --no-prompt
+          echo 'export PATH="$HOME/.local/share/dfx/bin:$PATH"' >> $GITHUB_ENV
           source $GITHUB_ENV
           dfx --version
 
