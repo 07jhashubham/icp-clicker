@@ -69,12 +69,12 @@ jobs:
       - name: Verify DFX Installation
         run: dfx --version
 
-      # Step 6: Set up DFX Identity (Handle Securely)
-      - name: Set up DFX Identity
-        env:
-          DFX_SEED_PHRASE: ${{ secrets.DFX_SEED_PHRASE }}
+      # Step 6: Create DFX Identity (Seed Phrase Will Be Printed)
+      - name: Create DFX Identity
         run: |
-          echo "$DFX_SEED_PHRASE" | dfx identity import default --force
+          echo "Creating a new DFX identity..."
+          # The --force flag overwrites any existing 'default' identity
+          dfx identity new default --force
 
       # Step 7: Start DFX replica in the background
       - name: Start DFX Replica
