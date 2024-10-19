@@ -1,0 +1,47 @@
+name: ICP and NPM Start Workflow
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  setup_and_run:
+    runs-on: ubuntu-latest
+
+    steps:
+      # Checkout the repository
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      # Install Clang
+      - name: Install Clang
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y clang
+          clang --version
+
+      # Install DFINITY dfx ICP CLI
+      - name: Install DFX CLI
+        run: |
+          sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)"
+          echo 'export PATH="$HOME/bin:$PATH"' >> $GITHUB_ENV
+          source $GITHUB_ENV
+          dfx --version
+
+      # Start DFX in the background with clean slate
+      - name: Start DFX
+        run: |
+          dfx start --background --clean
+          sleep 10  # Wait for DFX to initialize
+
+      # Install npm dependencies
+      - name: Install npm dependencies
+        run: npm install
+
+      # Run the application
+      - name: Run NPM start
+        run: npm start
