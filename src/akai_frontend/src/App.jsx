@@ -242,10 +242,10 @@ function App() {
           });
 
         reset_clicks()
-          .then(() => setClickCount(0))
           .catch((error) => {
             console.error("Failed to reset clicks:", error);
           });
+        return 0;
       } else {
         newValue = value + 1;
       }
