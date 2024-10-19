@@ -27,23 +27,33 @@ jobs:
       # Step 3: Install DFX ICP CLI by downloading the binary directly
       - name: Install DFX
         env:
-          DFX_VERSION: "1.16.0" # Specify the desired DFX version
+          DFX_VERSION: "0.24.0" # Specify the desired DFX version
+          DFX_URL: "https://github.com/dfinity/sdk/releases/download/0.24.0/dfx-x86_64-unknown-linux-gnu.tar.gz"
         run: |
-          echo "Downloading DFX version $DFX_VERSION..."
-          wget https://github.com/dfinity/sdk/releases/download/v$DFX_VERSION/dfx-$DFX_VERSION-x86_64-unknown-linux-gnu.tar.gz -O dfx.tar.gz
-          
+          echo "Downloading DFX version $DFX_VERSION from $DFX_URL..."
+          wget $DFX_URL -O dfx.tar.gz
+
           echo "Creating installation directory..."
           mkdir -p $HOME/.local/share/dfx/bin
-          
+
           echo "Extracting DFX binary..."
           tar -xzf dfx.tar.gz -C $HOME/.local/share/dfx/bin --strip-components=1
-          
+
+          echo "Verifying DFX binary exists..."
+          if [ ! -f "$HOME/.local/share/dfx/bin/dfx" ]; then
+            echo "DFX binary not found!"
+            exit 1
+          fi
+
+          echo "Making DFX executable..."
+          chmod +x $HOME/.local/share/dfx/bin/dfx
+
           echo "Adding DFX to PATH..."
           echo "$HOME/.local/share/dfx/bin" >> $GITHUB_PATH
-          
+
           echo "Cleaning up..."
           rm dfx.tar.gz
-          
+
           echo "DFX installation completed."
 
       # Step 4: Verify DFX installation
@@ -56,7 +66,18 @@ jobs:
 
       # Step 6: Wait for the replica to be ready
       - name: Wait for DFX Replica to Start
-        run: sleep 10
+        run: |
+          echo "Waiting for DFX Replica to start..."
+          for i in {1..30}; do
+            if dfx ping > /dev/null 2>&1; then
+              echo "DFX Replica is up!"
+              exit 0
+            fi
+            echo "Waiting for DFX Replica to start... ($i/30)"
+            sleep 1
+          done
+          echo "DFX Replica failed to start."
+          exit 1
 
       # Step 7: Deploy canisters
       - name: Deploy Canisters
@@ -77,4 +98,4 @@ jobs:
 
       # Step 10: Start the application
       - name: Start Application
-        run: npm start
+        run: npm start &
