@@ -18,17 +18,20 @@ jobs:
       - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # Step 2: Install dependencies for building the project
+      # Step 2: Set up Node.js
       - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '16' # Specify the Node.js version you need
 
-      # Step 3: Install DFX ICP CLI
+      # Step 3: Install DFX ICP CLI Non-Interactively
       - name: Install DFX
         run: |
-          wget -O- https://sdk.dfinity.org/install.sh | bash
-          echo "::add-path::$HOME/.dfx/bin"
+          # Download and run the DFX installation script with non-interactive flags
+          curl -fsSL https://sdk.dfinity.org/install.sh | bash -s -- --yes
+
+          # Add DFX to PATH manually
+          echo "$HOME/.local/share/dfx/bin" >> $GITHUB_PATH
 
       # Step 4: Verify DFX installation
       - name: Verify DFX Installation
@@ -46,10 +49,19 @@ jobs:
       - name: Deploy Canisters
         run: dfx deploy
 
-      # Step 8: Install NPM dependencies
+      # Step 8: Cache NPM dependencies
+      - name: Cache NPM modules
+        uses: actions/cache@v3
+        with:
+          path: ~/.npm
+          key: ${{ runner.os }}-node-${{ hashFiles('**/package-lock.json') }}
+          restore-keys: |
+            ${{ runner.os }}-node-
+
+      # Step 9: Install NPM dependencies
       - name: Install NPM Dependencies
         run: npm install
 
-      # Step 9: Start the application
+      # Step 10: Start the application
       - name: Start Application
         run: npm start
