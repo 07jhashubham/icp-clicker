@@ -24,7 +24,6 @@ jobs:
         with:
           node-version: '16' # Specify the Node.js version you need
 
-      # Step 3: Install Rust and add the wasm32 target
       - name: Install Rust
         uses: actions-rs/toolchain@v1
         with:
@@ -32,8 +31,8 @@ jobs:
           target: wasm32-unknown-unknown
           profile: minimal
           override: true
-      
-      # Step 4: Install DFX ICP CLI by downloading the binary directly
+
+      # Step 3: Install DFX ICP CLI by downloading the binary directly
       - name: Install DFX
         env:
           DFX_VERSION: "0.24.0" # Specify the desired DFX version
@@ -65,22 +64,15 @@ jobs:
 
           echo "DFX installation completed."
 
-      # Step 5: Verify DFX installation
+      # Step 4: Verify DFX installation
       - name: Verify DFX Installation
         run: dfx --version
 
-      # Step 6: Set up DFX Identity (Handle Securely)
-      - name: Set up DFX Identity
-        env:
-          DFX_SEED_PHRASE: ${{ secrets.DFX_SEED_PHRASE }}
-        run: |
-          echo "$DFX_SEED_PHRASE" | dfx identity import default --force
-
-      # Step 7: Start DFX replica in the background
+      # Step 5: Start DFX replica in the background
       - name: Start DFX Replica
         run: dfx start --clean --background
 
-      # Step 8: Wait for the replica to be ready
+      # Step 6: Wait for the replica to be ready
       - name: Wait for DFX Replica to Start
         run: |
           echo "Waiting for DFX Replica to start..."
@@ -95,11 +87,11 @@ jobs:
           echo "DFX Replica failed to start."
           exit 1
 
-      # Step 9: Deploy canisters
+      # Step 7: Deploy canisters
       - name: Deploy Canisters
         run: dfx deploy
 
-      # Step 10: Cache NPM dependencies
+      # Step 8: Cache NPM dependencies
       - name: Cache NPM modules
         uses: actions/cache@v3
         with:
@@ -108,10 +100,10 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-node-
 
-      # Step 11: Install NPM dependencies
+      # Step 9: Install NPM dependencies
       - name: Install NPM Dependencies
         run: npm install
 
-      # Step 12: Start the application
+      # Step 10: Start the application
       - name: Start Application
         run: npm start &
