@@ -35,12 +35,15 @@ jobs:
           mkdir -p $DFX_BIN_DIR
           curl -L https://github.com/dfinity/sdk/releases/download/$DFX_VERSION/dfx-$DFX_VERSION-x86_64-linux.tar.gz | tar -xz -C $DFX_BIN_DIR --strip-components 1
 
-          # Add dfx to the PATH for the current job
+          # Add dfx to the PATH for the current and subsequent steps
           echo "$DFX_BIN_DIR" >> $GITHUB_PATH
 
       # Verify DFX installation
       - name: Verify DFX Installation
-        run: dfx --version
+        run: |
+          echo "PATH: $PATH"
+          ls -la $HOME/.local/share/dfx/bin
+          dfx --version
 
       # Start DFX in the background with clean slate
       - name: Start DFX
