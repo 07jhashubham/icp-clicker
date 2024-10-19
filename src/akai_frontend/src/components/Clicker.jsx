@@ -1,6 +1,7 @@
-import React from "react";
-
 export default function Clicker({ clickCount, handleClick }) {
+  const disableContextMenu = (e) => {
+    e.preventDefault(); // Prevent the default context menu from appearing
+  };
   return (
     <div
       className="incubator-container"
@@ -15,32 +16,18 @@ export default function Clicker({ clickCount, handleClick }) {
       }}
     >
       <img
-        src="src/images/reactor.png" // Correct path to your incubator image
+        src="storage.png" // Updated path to storage.png
         alt="Incubator"
         style={{
-          width: "80%", // Adjust size as needed
-          maxWidth: "400px",
-          height: "420px",
-          objectFit: "contain",
+          width: "70%", // Adjust size as needed
+          maxWidth: "100%", // Scales with the viewport width
+          height: "auto",
+          objectFit: "contain", // Ensures the image maintains aspect ratio
         }}
+        className="responsive-image" // Assigning a class for responsive styling
+        onContextMenu={disableContextMenu}
       />
-      <div
-        className="incubator-fill"
-        style={{
-          position: "absolute",
-          bottom: 50,
-          borderTopLeftRadius: "10px",
-          borderTopRightRadius: "10px",
-          left: 150,
-          width: "43%",
-          height: `${(clickCount / 29) * 73}%`,
-          backgroundColor: "rgba(0, 255, 0, 0.5)", // Adjust color and opacity
-          transition: "height 0.3s ease",
-          zIndex: 1, // Ensure the fill is on top of the background image
-          borderBottomLeftRadius: "30px", // Adjust to match the container shape if needed
-          borderBottomRightRadius: "30px", // Adjust to match the container shape if needed
-        }}
-      />
+      <div className="incubator-fill" />
     </div>
   );
 }

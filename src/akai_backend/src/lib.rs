@@ -1,11 +1,10 @@
-use std::{env, time::Duration};
+use std::{cell::RefCell, env, time::Duration};
 use crate::db::powerups::PowerupType;
 
 use crate::db::task::TaskType;
 use backup::sync::backup;
-use db::{task::ops::settle_tasks, utils::create_tables_if_not_exist};
-use dotenv::dotenv;
-use ic_cdk::spawn;
+use db::{task::ops::settle_tasks, user::ops::create_new_user, utils::create_tables_if_not_exist};
+use ic_cdk::{api::management_canister::main::{install_code, CanisterInstallMode, InstallCodeArgument}, spawn};
 use ic_cdk_timers::set_timer_interval;
 use lazy_static::lazy_static;
 mod backup;
@@ -39,8 +38,14 @@ lazy_static! {
 
 #[ic_cdk::init]
 fn init() {
-    dotenv().ok();
     create_tables_if_not_exist().unwrap();
+
+    // FOR TESTING PURPOSES
+    create_new_user("user1234".to_string(), None, None, None, None).unwrap();
+
+
+
+
 
     if *COMMIT_BACKUPS && *BACKUP_DURATION > 0 {
         set_timer_interval(Duration::from_secs(*BACKUP_DURATION), || spawn(backup()));

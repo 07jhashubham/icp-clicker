@@ -1,73 +1,53 @@
-body,
-html {
-  margin: 0;
-  padding: 0;
-  width: 100%;
-  height: 100%;
-  font-family: Arial, sans-serif;
-  background-image: url("/src/images/background.png"); /* Ensure this path is correct */
-  background-size: cover;
-  background-position: center;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  overflow: hidden;
-}
-.container {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: space-between;
-  height: 100%;
-  padding-bottom: 60px; /* Adjust to keep the bottom navigation visible */
+body {
+  background-image: linear-gradient(
+      to top,
+      rgba(23, 23, 23, 1),
+      rgba(255, 255, 255, 0)
+    ),
+    /* Gradient fading upwards */ url("/store.png"), url("/Backgoround.png");
+  background-position: bottom, bottom, center;
+  background-size: 100% auto, 80% auto, cover;
+  background-repeat: no-repeat, no-repeat, no-repeat;
+  min-height: 100vh; /* Ensures full page height */
+  max-height: 100vh;
+  margin: 0; /* Remove default margin */
+  padding: 0; /* Remove default padding */
+  font-family: sans-serif; /* Optional: Add a font */
 }
 
-.content {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  width: 100%;
-}
-
-.incubator-container {
-  position: relative;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  width: 100%;
-}
-
-.incubator-fill {
-  position: absolute;
-  bottom: 0;
+.user-panel {
+  position: fixed;
+  top: 0;
   left: 0;
   width: 100%;
-  background-color: rgba(0, 255, 0, 0.5); /* Adjust color and opacity */
-  transition: height 0.3s ease; /* Smooth transition for fill animation */
-}
-
-.grid {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 10px;
-  padding: 10px;
-  justify-content: center;
-}
-
-.alien-box {
-  width: 100px;
-  height: 100px;
-  background-color: transparent;
+  height: auto;
+  z-index: 1000; /* Keep it on top */
   display: flex;
-  justify-content: center;
   align-items: center;
-  border-radius: 10px;
-  position: relative;
-  overflow: hidden;
+  justify-content: center;
+  text-align: center;
 }
 
-.alien-image {
-  width: 80%;
-  height: 80%;
-  object-fit: contain;
+.user-panel-image {
+  width: 100%;
+  height: auto; /* Keep the image aspect ratio */
+}
+
+.user-panel-text {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%); /* Center the text on the image */
+  color: white; /* Change the text color to be visible */
+  font-size: 24px; /* Adjust text size */
+}
+
+.user-panel-text h1 {
+  margin: 0;
+  font-size: 2rem; /* Adjust heading size */
+}
+
+.user-panel-text p {
+  font-size: 1rem; /* Adjust paragraph size */
+  margin: 0;
 }

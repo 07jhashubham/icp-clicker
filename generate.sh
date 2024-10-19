@@ -2,9 +2,9 @@
 
 BUILD_TARGET="wasm32-unknown-unknown"
 BUILD_DIR="target/$BUILD_TARGET/release"
-WASM_FILE="akai_backend.wasm"
-DID_FILE="akai_backend.did"
-SRC_DIR="src/akai_backend"
+WASM_FILE="deployer.wasm"
+DID_FILE="deployer.did"
+SRC_DIR="src/deployer"
 
 if [ -f "$BUILD_DIR/$WASM_FILE" ]; then
   echo "Removing existing WASM file..."

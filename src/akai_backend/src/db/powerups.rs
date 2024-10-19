@@ -39,7 +39,6 @@ impl ToString for PowerupType{
 pub struct Powerup {
     pub id: usize,
     pub r#type: PowerupType,
-    pub owner: String
 }
 
 
@@ -62,6 +61,10 @@ fn get_random_powerup() -> Result<usize, String> {
 
 #[update]
 pub fn spawn_random_powerup(wallet_address: String) -> Result<PowerupType, String>{
+    let powerups: Vec<Powerup> = serde_json::from_str(&get_all_powerups(wallet_address.clone())?).map_err(|e| e.to_string())?;
+    if powerups.len() >= 3 {
+        return Err("You have reached the maximum number of powerups".to_string());
+    }
     let powerup_type = match get_random_powerup()? {
         0 => PowerupType::Spawner,
         1 => PowerupType::ClickMultiplier,
@@ -104,8 +107,7 @@ pub fn get_all_powerups(wallet_address: String) -> Result<String, String> {
     for powerup in powerup_iter {
         powerups.push(Powerup{
             id: powerup.as_ref().map_err(|e| e.to_string())?.0,
-            r#type: PowerupType::from_str(&powerup.as_ref().map_err(|e| e.to_string())?.1).map_err(|e| e.to_string())?,
-            owner: powerup.map_err(|e| e.to_string())?.2
+            r#type: PowerupType::from_str(&powerup.as_ref().map_err(|e| e.to_string())?.1).map_err(|e| e.to_string())?
         });
     }
 

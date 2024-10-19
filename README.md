@@ -1,7 +1,9 @@
 # AKAI SPACE
+
 Contains the necessary documentation for seamless audits and bug fixing
 
 ## Task Settlement Logic
+
 ![image](https://github.com/user-attachments/assets/203cabd1-173c-4ff6-af3d-61cc56985a8e)
 
 ## ic-sqlite-features
@@ -15,7 +17,6 @@ cargo add ic-sqlite-features
 ```
 
 Project Link: https://github.com/JoeruCodes/ic-sqlite
-
 
 ## ic-rand
 
@@ -32,16 +33,20 @@ cargo add ic-rand
 Project Link: https://github.com/JoeruCodes/ic-rand
 
 # Generating candids
-Run `generate.sh` to generate candids for frontend definitions. 
-- Start by installing `candid-extractor` with `cargo install candid-extractor`. 
-- Then, make the script executable using `chmod +x generate.sh` 
+
+Run `generate.sh` to generate candids for frontend definitions.
+
+- Start by installing `candid-extractor` with `cargo install candid-extractor`.
+- Then, make the script executable using `chmod +x generate.sh`
 - Execute it with `./generate.sh`
 
 # Backup System
+
 To utilize the backup system, follow these steps:
 
 - Create a C# file in your project.
 - Add the following code for the Azure Function:
+
 ```
 using System.IO;
 using System.Text.Json;
@@ -95,10 +100,12 @@ public class RequestData
 ```
 
 # Backup System Chunked Stream
+
 To utilize the chunked streamed backup system, follow these steps:
 
 - Create a C# file in your project.
 - Add the following code for the Azure Function:
+
 ```
 public static async Task<IActionResult> Run(
     [HttpTrigger(AuthorizationLevel.Function, "post", Route = null)] HttpRequest req,
@@ -127,289 +134,289 @@ public static async Task<IActionResult> Run(
     return new OkObjectResult($"File uploaded successfully. Part: {partNumber}");
 }
 ```
+
 # NOTE
+
 If `dfx deploy --playground` is failing because `assetstorage.did` cannot be found, follow this workaround:
 
 Create the file `.dfx/local/canisters/akai_frontend/assetstorage.did` with the following content:
 
-  ```
-  type BatchId = nat;
+```
+type BatchId = nat;
 type ChunkId = nat;
 type Key = text;
 type Time = int;
 
 type CreateAssetArguments = record {
-  key : Key;
-  content_type : text;
-  max_age : opt nat64;
-  headers : opt vec HeaderField;
-  enable_aliasing : opt bool;
-  allow_raw_access : opt bool;
+key : Key;
+content_type : text;
+max_age : opt nat64;
+headers : opt vec HeaderField;
+enable_aliasing : opt bool;
+allow_raw_access : opt bool;
 };
 
 // Add or change content for an asset, by content encoding
 type SetAssetContentArguments = record {
-  key : Key;
-  content_encoding : text;
-  chunk_ids : vec ChunkId;
-  sha256 : opt blob;
+key : Key;
+content_encoding : text;
+chunk_ids : vec ChunkId;
+sha256 : opt blob;
 };
 
 // Remove content for an asset, by content encoding
 type UnsetAssetContentArguments = record {
-  key : Key;
-  content_encoding : text;
+key : Key;
+content_encoding : text;
 };
 
 // Delete an asset
 type DeleteAssetArguments = record {
-  key : Key;
+key : Key;
 };
 
 // Reset everything
 type ClearArguments = record {};
 
 type BatchOperationKind = variant {
-  CreateAsset : CreateAssetArguments;
-  SetAssetContent : SetAssetContentArguments;
+CreateAsset : CreateAssetArguments;
+SetAssetContent : SetAssetContentArguments;
 
-  SetAssetProperties : SetAssetPropertiesArguments;
+SetAssetProperties : SetAssetPropertiesArguments;
 
-  UnsetAssetContent : UnsetAssetContentArguments;
-  DeleteAsset : DeleteAssetArguments;
+UnsetAssetContent : UnsetAssetContentArguments;
+DeleteAsset : DeleteAssetArguments;
 
-  Clear : ClearArguments;
+Clear : ClearArguments;
 };
 
 type CommitBatchArguments = record {
-  batch_id : BatchId;
-  operations : vec BatchOperationKind;
+batch_id : BatchId;
+operations : vec BatchOperationKind;
 };
 
 type CommitProposedBatchArguments = record {
-  batch_id : BatchId;
-  evidence : blob;
+batch_id : BatchId;
+evidence : blob;
 };
 
 type ComputeEvidenceArguments = record {
-  batch_id : BatchId;
-  max_iterations : opt nat16;
+batch_id : BatchId;
+max_iterations : opt nat16;
 };
 
 type DeleteBatchArguments = record {
-  batch_id : BatchId;
+batch_id : BatchId;
 };
 
 type HeaderField = record { text; text };
 
 type HttpRequest = record {
-  method : text;
-  url : text;
-  headers : vec HeaderField;
-  body : blob;
-  certificate_version : opt nat16;
+method : text;
+url : text;
+headers : vec HeaderField;
+body : blob;
+certificate_version : opt nat16;
 };
 
 type HttpResponse = record {
-  status_code : nat16;
-  headers : vec HeaderField;
-  body : blob;
-  streaming_strategy : opt StreamingStrategy;
+status_code : nat16;
+headers : vec HeaderField;
+body : blob;
+streaming_strategy : opt StreamingStrategy;
 };
 
 type StreamingCallbackHttpResponse = record {
-  body : blob;
-  token : opt StreamingCallbackToken;
+body : blob;
+token : opt StreamingCallbackToken;
 };
 
 type StreamingCallbackToken = record {
-  key : Key;
-  content_encoding : text;
-  index : nat;
-  sha256 : opt blob;
+key : Key;
+content_encoding : text;
+index : nat;
+sha256 : opt blob;
 };
 
 type StreamingStrategy = variant {
-  Callback : record {
-    callback : func(StreamingCallbackToken) -> (opt StreamingCallbackHttpResponse) query;
-    token : StreamingCallbackToken;
-  };
+Callback : record {
+  callback : func(StreamingCallbackToken) -> (opt StreamingCallbackHttpResponse) query;
+  token : StreamingCallbackToken;
+};
 };
 
 type SetAssetPropertiesArguments = record {
-  key : Key;
-  max_age : opt opt nat64;
-  headers : opt opt vec HeaderField;
-  allow_raw_access : opt opt bool;
-  is_aliased : opt opt bool;
+key : Key;
+max_age : opt opt nat64;
+headers : opt opt vec HeaderField;
+allow_raw_access : opt opt bool;
+is_aliased : opt opt bool;
 };
 
 type ConfigurationResponse = record {
-  max_batches : opt nat64;
-  max_chunks : opt nat64;
-  max_bytes : opt nat64;
+max_batches : opt nat64;
+max_chunks : opt nat64;
+max_bytes : opt nat64;
 };
 
 type ConfigureArguments = record {
-  max_batches : opt opt nat64;
-  max_chunks : opt opt nat64;
-  max_bytes : opt opt nat64;
+max_batches : opt opt nat64;
+max_chunks : opt opt nat64;
+max_bytes : opt opt nat64;
 };
 
 type Permission = variant {
-  Commit;
-  ManagePermissions;
-  Prepare;
+Commit;
+ManagePermissions;
+Prepare;
 };
 
 type GrantPermission = record {
-  to_principal : principal;
-  permission : Permission;
+to_principal : principal;
+permission : Permission;
 };
 type RevokePermission = record {
-  of_principal : principal;
-  permission : Permission;
+of_principal : principal;
+permission : Permission;
 };
 type ListPermitted = record { permission : Permission };
 
 type ValidationResult = variant { Ok : text; Err : text };
 
 type AssetCanisterArgs = variant {
-  Init : InitArgs;
-  Upgrade : UpgradeArgs;
+Init : InitArgs;
+Upgrade : UpgradeArgs;
 };
 
 type InitArgs = record {};
 
 type UpgradeArgs = record {
-  set_permissions : opt SetPermissions;
+set_permissions : opt SetPermissions;
 };
 
 /// Sets the list of principals granted each permission.
 type SetPermissions = record {
-  prepare : vec principal;
-  commit : vec principal;
-  manage_permissions : vec principal;
+prepare : vec principal;
+commit : vec principal;
+manage_permissions : vec principal;
 };
 
 service : (asset_canister_args : opt AssetCanisterArgs) -> {
-  api_version : () -> (nat16) query;
+api_version : () -> (nat16) query;
 
-  get : (
-    record {
-      key : Key;
-      accept_encodings : vec text;
-    },
-  ) -> (
-    record {
-      content : blob; // may be the entirety of the content, or just chunk index 0
-      content_type : text;
+get : (
+  record {
+    key : Key;
+    accept_encodings : vec text;
+  },
+) -> (
+  record {
+    content : blob; // may be the entirety of the content, or just chunk index 0
+    content_type : text;
+    content_encoding : text;
+    sha256 : opt blob; // sha256 of entire asset encoding, calculated by dfx and passed in SetAssetContentArguments
+    total_length : nat; // all chunks except last have size == content.size()
+  },
+) query;
+
+// if get() returned chunks > 1, call this to retrieve them.
+// chunks may or may not be split up at the same boundaries as presented to create_chunk().
+get_chunk : (
+  record {
+    key : Key;
+    content_encoding : text;
+    index : nat;
+    sha256 : opt blob; // sha256 of entire asset encoding, calculated by dfx and passed in SetAssetContentArguments
+  },
+) -> (record { content : blob }) query;
+
+list : (record {}) -> (
+  vec record {
+    key : Key;
+    content_type : text;
+    encodings : vec record {
       content_encoding : text;
       sha256 : opt blob; // sha256 of entire asset encoding, calculated by dfx and passed in SetAssetContentArguments
-      total_length : nat; // all chunks except last have size == content.size()
-    },
-  ) query;
+      length : nat; // Size of this encoding's blob. Calculated when uploading assets.
+      modified : Time;
+    };
+  },
+) query;
 
-  // if get() returned chunks > 1, call this to retrieve them.
-  // chunks may or may not be split up at the same boundaries as presented to create_chunk().
-  get_chunk : (
-    record {
-      key : Key;
-      content_encoding : text;
-      index : nat;
-      sha256 : opt blob; // sha256 of entire asset encoding, calculated by dfx and passed in SetAssetContentArguments
-    },
-  ) -> (record { content : blob }) query;
+certified_tree : (record {}) -> (
+  record {
+    certificate : blob;
+    tree : blob;
+  },
+) query;
 
-  list : (record {}) -> (
-    vec record {
-      key : Key;
-      content_type : text;
-      encodings : vec record {
-        content_encoding : text;
-        sha256 : opt blob; // sha256 of entire asset encoding, calculated by dfx and passed in SetAssetContentArguments
-        length : nat; // Size of this encoding's blob. Calculated when uploading assets.
-        modified : Time;
-      };
-    },
-  ) query;
+create_batch : (record {}) -> (record { batch_id : BatchId });
 
-  certified_tree : (record {}) -> (
-    record {
-      certificate : blob;
-      tree : blob;
-    },
-  ) query;
+create_chunk : (record { batch_id : BatchId; content : blob }) -> (record { chunk_id : ChunkId });
 
-  create_batch : (record {}) -> (record { batch_id : BatchId });
+// Perform all operations successfully, or reject
+commit_batch : (CommitBatchArguments) -> ();
 
-  create_chunk : (record { batch_id : BatchId; content : blob }) -> (record { chunk_id : ChunkId });
+// Save the batch operations for later commit
+propose_commit_batch : (CommitBatchArguments) -> ();
 
-  // Perform all operations successfully, or reject
-  commit_batch : (CommitBatchArguments) -> ();
+// Given a batch already proposed, perform all operations successfully, or reject
+commit_proposed_batch : (CommitProposedBatchArguments) -> ();
 
-  // Save the batch operations for later commit
-  propose_commit_batch : (CommitBatchArguments) -> ();
+// Compute a hash over the CommitBatchArguments.  Call until it returns Some(evidence).
+compute_evidence : (ComputeEvidenceArguments) -> (opt blob);
 
-  // Given a batch already proposed, perform all operations successfully, or reject
-  commit_proposed_batch : (CommitProposedBatchArguments) -> ();
+// Delete a batch that has been created, or proposed for commit, but not yet committed
+delete_batch : (DeleteBatchArguments) -> ();
 
-  // Compute a hash over the CommitBatchArguments.  Call until it returns Some(evidence).
-  compute_evidence : (ComputeEvidenceArguments) -> (opt blob);
+create_asset : (CreateAssetArguments) -> ();
+set_asset_content : (SetAssetContentArguments) -> ();
+unset_asset_content : (UnsetAssetContentArguments) -> ();
 
-  // Delete a batch that has been created, or proposed for commit, but not yet committed
-  delete_batch : (DeleteBatchArguments) -> ();
+delete_asset : (DeleteAssetArguments) -> ();
 
-  create_asset : (CreateAssetArguments) -> ();
-  set_asset_content : (SetAssetContentArguments) -> ();
-  unset_asset_content : (UnsetAssetContentArguments) -> ();
+clear : (ClearArguments) -> ();
 
-  delete_asset : (DeleteAssetArguments) -> ();
+// Single call to create an asset with content for a single content encoding that
+// fits within the message ingress limit.
+store : (
+  record {
+    key : Key;
+    content_type : text;
+    content_encoding : text;
+    content : blob;
+    sha256 : opt blob;
+  },
+) -> ();
 
-  clear : (ClearArguments) -> ();
+http_request : (request : HttpRequest) -> (HttpResponse) query;
+http_request_streaming_callback : (token : StreamingCallbackToken) -> (opt StreamingCallbackHttpResponse) query;
 
-  // Single call to create an asset with content for a single content encoding that
-  // fits within the message ingress limit.
-  store : (
-    record {
-      key : Key;
-      content_type : text;
-      content_encoding : text;
-      content : blob;
-      sha256 : opt blob;
-    },
-  ) -> ();
+authorize : (principal) -> ();
+deauthorize : (principal) -> ();
+list_authorized : () -> (vec principal);
+grant_permission : (GrantPermission) -> ();
+revoke_permission : (RevokePermission) -> ();
+list_permitted : (ListPermitted) -> (vec principal);
+take_ownership : () -> ();
 
-  http_request : (request : HttpRequest) -> (HttpResponse) query;
-  http_request_streaming_callback : (token : StreamingCallbackToken) -> (opt StreamingCallbackHttpResponse) query;
+get_asset_properties : (key : Key) -> (
+  record {
+    max_age : opt nat64;
+    headers : opt vec HeaderField;
+    allow_raw_access : opt bool;
+    is_aliased : opt bool;
+  },
+) query;
+set_asset_properties : (SetAssetPropertiesArguments) -> ();
 
-  authorize : (principal) -> ();
-  deauthorize : (principal) -> ();
-  list_authorized : () -> (vec principal);
-  grant_permission : (GrantPermission) -> ();
-  revoke_permission : (RevokePermission) -> ();
-  list_permitted : (ListPermitted) -> (vec principal);
-  take_ownership : () -> ();
+get_configuration : () -> (ConfigurationResponse);
+configure : (ConfigureArguments) -> ();
 
-  get_asset_properties : (key : Key) -> (
-    record {
-      max_age : opt nat64;
-      headers : opt vec HeaderField;
-      allow_raw_access : opt bool;
-      is_aliased : opt bool;
-    },
-  ) query;
-  set_asset_properties : (SetAssetPropertiesArguments) -> ();
-
-  get_configuration : () -> (ConfigurationResponse);
-  configure : (ConfigureArguments) -> ();
-
-  validate_grant_permission : (GrantPermission) -> (ValidationResult);
-  validate_revoke_permission : (RevokePermission) -> (ValidationResult);
-  validate_take_ownership : () -> (ValidationResult);
-  validate_commit_proposed_batch : (CommitProposedBatchArguments) -> (ValidationResult);
-  validate_configure : (ConfigureArguments) -> (ValidationResult);
+validate_grant_permission : (GrantPermission) -> (ValidationResult);
+validate_revoke_permission : (RevokePermission) -> (ValidationResult);
+validate_take_ownership : () -> (ValidationResult);
+validate_commit_proposed_batch : (CommitProposedBatchArguments) -> (ValidationResult);
+validate_configure : (ConfigureArguments) -> (ValidationResult);
 };
 ```
-
-

@@ -14,5 +14,16 @@
   "type": "module",
   "workspaces": [
     "src/akai_frontend"
-  ]
+  ],
+  "dependencies": {
+    "@dfinity/agent": "^2.1.2",
+    "@dfinity/candid": "^2.1.2",
+    "@dfinity/principal": "^2.1.2",
+    "@ic-reactor/react": "^1.10.1",
+    "js-cookie": "^3.0.5",
+    "react-device-detect": "^2.2.3",
+    "react-dnd": "^16.0.1",
+    "react-dnd-html5-backend": "^16.0.1",
+    "react-dnd-touch-backend": "^16.0.1"
+  }
 }
