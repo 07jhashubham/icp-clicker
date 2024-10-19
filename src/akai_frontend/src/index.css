@@ -131,7 +131,7 @@ body {
 /* For small screens */
 @media (max-width: 400px) {
   .responsive-image {
-    max-height: 60vh; /* Height for screens 400px and below */
+    max-height: 50vh; /* Height for screens 400px and below */
   }
 
   .side-panel-icon {
@@ -143,11 +143,19 @@ body {
     width: 75%;
     height: auto;
   }
+  .userName {
+    top: -0.9rem;
+    left: -0.8rem;
+    scale: 80%;
+  }
+  .box12Container {
+    scale: 86%;
+  }
 }
 
 @media (max-width: 390px) {
   .responsive-image {
-    max-height: 50vh; /* Height for screens 390px and below */
+    max-height: 45vh; /* Height for screens 390px and below */
   }
 
   .side-panel-icon {
@@ -157,6 +165,14 @@ body {
   .check-image {
     width: 75%;
     height: auto;
+  }
+  .userName {
+    top: -1rem;
+    left: -1rem;
+    scale: 70%;
+  }
+  .box12Container {
+    scale: 82%;
   }
 }
 
@@ -173,5 +189,14 @@ body {
   .check-image {
     width: 55%;
     height: auto;
+  }
+
+  .userName {
+    top: -1rem;
+    left: -1rem;
+    scale: 60%;
+  }
+  .box12Container {
+    scale: 75%;
   }
 }
