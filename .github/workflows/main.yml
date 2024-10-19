@@ -1,5 +1,6 @@
-name: ICP and NPM Start Workflow
+name: ICP Build and Deploy
 
+# Trigger the workflow on push or pull request to the main branch
 on:
   push:
     branches:
@@ -9,49 +10,46 @@ on:
       - main
 
 jobs:
-  setup_and_run:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # Checkout the repository
-      - name: Checkout repository
+      # Step 1: Checkout the repository
+      - name: Checkout Repository
         uses: actions/checkout@v3
 
-      # Install Clang
-      - name: Install Clang
+      # Step 2: Install dependencies for building the project
+      - name: Set up Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16' # Specify the Node.js version you need
+
+      # Step 3: Install DFX ICP CLI
+      - name: Install DFX
         run: |
-          sudo apt-get update
-          sudo apt-get install -y clang
-          clang --version
+          wget -O- https://sdk.dfinity.org/install.sh | bash
+          echo "::add-path::$HOME/.dfx/bin"
 
-      # Download and install DFX CLI directly from the official source
-      - name: Install DFX CLI
-        run: |
-          DFX_VERSION=0.13.1  # Specify the desired version of dfx
-          
-          # Install DFX using the official installation script
-          sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)" <<<"yes"
-
-          # Add dfx to the PATH for the current job
-          echo "$HOME/bin" >> $GITHUB_PATH
-
-      # Verify DFX installation
+      # Step 4: Verify DFX installation
       - name: Verify DFX Installation
-        run: |
-          echo "PATH: $PATH"
-          ls -la $HOME/bin
-          dfx --version
+        run: dfx --version
 
-      # Start DFX in the background with clean slate
-      - name: Start DFX
-        run: |
-          dfx start --background --clean
-          sleep 10  # Wait for DFX to initialize
+      # Step 5: Start DFX replica in the background
+      - name: Start DFX Replica
+        run: dfx start --clean --background
 
-      # Install npm dependencies
-      - name: Install npm dependencies
+      # Step 6: Wait for the replica to be ready
+      - name: Wait for DFX Replica to Start
+        run: sleep 10
+
+      # Step 7: Deploy canisters
+      - name: Deploy Canisters
+        run: dfx deploy
+
+      # Step 8: Install NPM dependencies
+      - name: Install NPM Dependencies
         run: npm install
 
-      # Run the application
-      - name: Run NPM start
+      # Step 9: Start the application
+      - name: Start Application
         run: npm start
