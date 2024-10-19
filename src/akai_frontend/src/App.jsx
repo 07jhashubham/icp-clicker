@@ -6,8 +6,28 @@ import UserProfile from "./components/UserProfile";
 import "./index.css";
 import { useQueryCall, useUpdateCall } from "@ic-reactor/react";
 import ImageLabeler from "./components/ImageLabel";
+import Cookies from "js-cookie"; // Import Cookies
+
+async function createNewUserIfNotExists(setWalletAddress, createNewUser) {
+  const existingWalletAddress = Cookies.get("WalletAddress");
+  if (existingWalletAddress) {
+    setWalletAddress(existingWalletAddress);
+    return existingWalletAddress;
+  }
+
+  const RandomWalletAddress = Math.random().toString(36).substring(2, 15);
+
+  // Use [] to represent optional empty text fields
+  const response = await createNewUser([RandomWalletAddress, [], [], [], []]);
+
+  console.log("New User Created with Wallet Address: ", RandomWalletAddress);
+  Cookies.set("WalletAddress", RandomWalletAddress);
+  setWalletAddress(RandomWalletAddress);
+  return RandomWalletAddress;
+}
 
 function App() {
+  const [walletAddress, setWalletAddress] = useState(Cookies.get("WalletAddress") || null);
   const [clickCount, setClickCount] = useState(0);
   const [boxes, setBoxes] = useState([]);
   const [powerupBoxes, setPowerupBoxes] = useState([]);
@@ -16,8 +36,8 @@ function App() {
   // Fetch user data
   const { data, call: refetchData } = useQueryCall({
     functionName: "get_user_data",
-    args: ["user1234"],
-    refetchOnMount: true,
+    args: walletAddress ? [walletAddress] : [], // Use empty array instead of null
+    enabled: !!walletAddress, // Ensure the query is only enabled when walletAddress is set
   });
 
   const disableContextMenu = (e) => {
@@ -32,8 +52,9 @@ function App() {
     error: aliensError,
   } = useQueryCall({
     functionName: "get_aliens",
-    args: ["user1234"],
+    args: walletAddress ? [walletAddress] : [],
     refetchOnMount: true,
+    enabled: !!walletAddress,
   });
 
   const {
@@ -43,31 +64,47 @@ function App() {
     error: powerupsError,
   } = useQueryCall({
     functionName: "get_all_powerups",
-    args: ["user1234"],
+    args: walletAddress ? [walletAddress] : [],
     refetchOnMount: true,
+    enabled: !!walletAddress,
   });
 
   const { call: spawn_aliens } = useUpdateCall({
     functionName: "spawn_aliens",
-    args: ["user1234", 1],
+    args: walletAddress ? [walletAddress, 1] : [],
+    enabled: !!walletAddress,
   });
 
   const { call: spawn_powerup } = useUpdateCall({
     functionName: "spawn_random_powerup",
-    args: ["user1234"],
+    args: walletAddress ? [walletAddress] : [],
+    enabled: !!walletAddress,
   });
 
   const { call: reset_clicks } = useUpdateCall({
     functionName: "reset_clicks",
-    args: ["user1234"],
+    args: walletAddress ? [walletAddress] : [],
+    enabled: !!walletAddress,
+  });
+
+  const { call: createNewUser } = useUpdateCall({
+    functionName: "create_new_user",
   });
 
   const [user, setUser] = useState(null);
 
   const { call: increment_clicks } = useUpdateCall({
     functionName: "update_clicks",
-    args: ["user1234", 1],
+    args: walletAddress ? [walletAddress, 1] : [],
+    enabled: !!walletAddress,
   });
+
+  useEffect(() => {
+    // Create user if not exists when the app loads
+    if (!walletAddress) {
+      createNewUserIfNotExists(setWalletAddress, createNewUser);
+    }
+  }, [walletAddress, createNewUser]);
 
   useEffect(() => {
     // Function to handle any interaction (click or back button press)
@@ -121,8 +158,11 @@ function App() {
       } catch (error) {
         console.error("Failed to parse data.Ok:", error);
       }
+    } else if (walletAddress) {
+      // Only refetch data if walletAddress is set
+      refetchData();
     }
-  }, [data, data?.Ok]);
+  }, [data, data?.Ok, walletAddress, refetchData]);
 
   useEffect(() => {
     if (aliensData && aliensData.Ok) {
@@ -153,10 +193,10 @@ function App() {
       try {
         const newPowerups = JSON.parse(powerupsData.Ok);
 
-        // Map aliens to include 'index' and 'level'
+        // Map powerups to include 'index' and 'type'
         const mappedPowerups = newPowerups.map((powerup, idx) => ({
           index: idx, // Assign an index for grid placement
-          type: powerup.type, // Map 'lvl' to 'level' for consistency
+          type: powerup.type, // Map 'type' accordingly
           id: powerup.id, // Retain the 'id' if needed
         }));
 
@@ -167,12 +207,14 @@ function App() {
           return prevBoxes;
         });
       } catch (error) {
-        console.error("Failed to parse aliensData.Ok:", error);
+        console.error("Failed to parse powerupsData.Ok:", error);
       }
     }
   }, [powerupsData, powerupsData?.Ok]);
 
   const handleClick = useCallback(() => {
+    if (!walletAddress) return; // Prevent actions if walletAddress is not set
+
     // Update UI immediately
     setClickCount((value) => {
       let newValue;
@@ -200,7 +242,7 @@ function App() {
           });
 
         reset_clicks()
-          .then((res) => setClickCount(0))
+          .then(() => setClickCount(0))
           .catch((error) => {
             console.error("Failed to reset clicks:", error);
           });
@@ -212,12 +254,22 @@ function App() {
 
     // Send update to server in background
     increment_clicks()
-      .then(refetchData)
+      .then(() => refetchData())
       .catch((error) => {
         console.error("Failed to update clicks on server:", error);
         setClickCount((value) => value - 1);
       });
-  }, [increment_clicks, refetchData, spawn_aliens, refetchAliens]);
+  }, [
+    walletAddress,
+    increment_clicks,
+    refetchData,
+    spawn_aliens,
+    refetchAliens,
+    spawn_powerup,
+    refetchPowerups,
+    reset_clicks,
+    boxes.length,
+  ]);
 
   // Ensure 'user' is not null before accessing 'user.clicks'
   if (!user || aliensLoading || powerupsLoading) {
@@ -229,7 +281,7 @@ function App() {
   }
 
   if (powerupsError) {
-    return <p>Error loading aliens data.</p>;
+    return <p>Error loading powerups data.</p>;
   }
   // Now it's safe to access 'user.clicks'
   console.log(user.clicks);
@@ -246,6 +298,7 @@ function App() {
           <UserProfile user={user} />
           <Clicker clickCount={clickCount} handleClick={handleClick} />
           <SidePanel
+            walletAddress={walletAddress}
             powerupBoxes={powerupBoxes}
             setPowerupBoxes={setPowerupBoxes}
           />

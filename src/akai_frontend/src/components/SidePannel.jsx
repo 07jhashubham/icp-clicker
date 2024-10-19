@@ -1,7 +1,7 @@
 import { useUpdateCall } from "@ic-reactor/react";
 import React from "react";
 
-export default function SidePanel({ powerupBoxes, setPowerupBoxes }) {
+export default function SidePanel({ walletAddress, powerupBoxes, setPowerupBoxes }) {
   console.log(powerupBoxes);
 
   const { call: use_powerup } = useUpdateCall({
@@ -10,7 +10,7 @@ export default function SidePanel({ powerupBoxes, setPowerupBoxes }) {
 
   const usePowerup = (index, powerupId) => {
     // Call the hook with the powerupId dynamically
-    use_powerup(["user1234", powerupId]).then(() => {
+    use_powerup([walletAddress, powerupId]).then(() => {
       setPowerupBoxes((prev) => {
         const newBoxes = [...prev];
         newBoxes.splice(index, 1);

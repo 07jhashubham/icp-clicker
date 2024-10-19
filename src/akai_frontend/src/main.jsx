@@ -6,7 +6,7 @@ import { ActorProvider, AgentProvider } from "@ic-reactor/react";
 import { idlFactory, canisterId } from "../../declarations/akai_backend";
 createRoot(document.getElementById("root")).render(
   <StrictMode>
-    <AgentProvider withProcessEnv={true} host="http://localhost:4943/">
+    <AgentProvider withProcessEnv={true}>
       <ActorProvider idlFactory={idlFactory} canisterId={canisterId}>
         <App />
       </ActorProvider>
