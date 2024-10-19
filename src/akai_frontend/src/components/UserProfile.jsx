@@ -32,7 +32,7 @@ function UserProfile({ user }) {
               />
 
               {/* Centered text over the image */}
-              <p className="absolute -top-3 -left-8 w-full h-full flex items-center justify-center text-white font-mono">
+              <p className="absolute -left-4 -top-3 text-xs userName w-full h-full flex items-center justify-center text-white font-mono">
                 {user ? user.wallet_address : "Loading..."}
               </p>
               <p className="absolute text-2xl text-yellow-400 glow-effect hover:glow-off">
