@@ -24,25 +24,22 @@ jobs:
           sudo apt-get install -y clang
           clang --version
 
-      # Download and install DFX CLI manually (non-interactive)
+      # Download and install DFX CLI directly from the official source
       - name: Install DFX CLI
         run: |
           DFX_VERSION=0.13.1  # Specify the desired version of dfx
-          DFX_INSTALL_DIR="$HOME/.local/share/dfx"
-          DFX_BIN_DIR="$DFX_INSTALL_DIR/bin"
+          
+          # Install DFX using the official installation script
+          sh -ci "$(curl -fsSL https://internetcomputer.org/install.sh)" <<<"yes"
 
-          # Create the directory and download the dfx binary
-          mkdir -p $DFX_BIN_DIR
-          curl -L https://github.com/dfinity/sdk/releases/download/$DFX_VERSION/dfx-$DFX_VERSION-x86_64-linux.tar.gz | tar -xz -C $DFX_BIN_DIR --strip-components 1
-
-          # Add dfx to the PATH for the current and subsequent steps
-          echo "$DFX_BIN_DIR" >> $GITHUB_PATH
+          # Add dfx to the PATH for the current job
+          echo "$HOME/bin" >> $GITHUB_PATH
 
       # Verify DFX installation
       - name: Verify DFX Installation
         run: |
           echo "PATH: $PATH"
-          ls -la $HOME/.local/share/dfx/bin
+          ls -la $HOME/bin
           dfx --version
 
       # Start DFX in the background with clean slate
