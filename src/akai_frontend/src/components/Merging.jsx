@@ -195,7 +195,7 @@ export default function Merging({
         >
           {/* lostCoin Image */}
           <img
-            src="lostCoin.png"
+            src="tok.png"
             alt="Lost Coin"
             style={{
               width: "40px", // Adjust size as needed

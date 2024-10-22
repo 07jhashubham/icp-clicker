@@ -72,9 +72,9 @@ function UserProfile({ user }) {
             {/* Centered text over the image */}
             <div className="absolute w-full h-full flex items-center text-white font-sans justify-around">
               <img
-                src="mainCoin.png"
+                src="tok.png"
                 alt="Main Coin"
-                className="scale-125"
+                className="scale-125 w-auto h-[10px]"
                 onContextMenu={disableContextMenu}
               />
               <p>{user ? user.exp : "Loading..."}</p>

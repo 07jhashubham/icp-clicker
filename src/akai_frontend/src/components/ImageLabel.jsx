@@ -202,34 +202,103 @@ export default function ImageLabeler() {
   const currentPrompt = "Highlight the person wearing a yellow helmet"; // Static prompt
 
   return (
-    <div className="image-labeler">
+    <div className="image-labeler mt-10 w-full">
       {selectedImages.length > 0 ? (
         <>
-          <div className="prompt">
-            <h3>{currentPrompt}</h3>
+          <div className="prompt relative w-full">
+            {/* Left side image */}
+            <div className="fixed mt-16 top-0 left-0">
+              <div className="relative w-48 h-16">
+                <img
+                  src="t2-p2.png"
+                  alt=""
+                  className="absolute inset-0 w-full h-full "
+                />
+                <img
+                  src="t2-p6.png"
+                  alt=""
+                  className="absolute inset-0 w-full h-full "
+                />
+              </div>
+            </div>
+            <div className="fixed mt-16 top-0 right-0">
+              <div className="relative w-48 h-16">
+                <img
+                  src="t2-p2.png"
+                  alt=""
+                  className="absolute inset-0 w-full h-full transform scale-x-[-1]"
+                />
+                <img
+                  src="t2-p6.png"
+                  alt=""
+                  className="absolute inset-0 w-full h-full transform scale-x-[-1]"
+                />
+              </div>
+            </div>
+
+            {/* Center content */}
+            <div className="flex-grow flex justify-center items-center z-20 ">
+              <div className="bg-[url('/t2-p1.png')] scale-125 bg-contain bg-no-repeat bg-center flex justify-center items-center">
+                <h3 className="scale-50 font-mono font-bold text-black">
+                  {currentPrompt}
+                </h3>
+              </div>
+            </div>
+
+            {/* Right side image */}
           </div>
-          <div className="image-container">
-            <img
-              ref={imgRef}
-              src={currentImage}
-              alt="Labeling"
-              className="image"
-              style={{ display: "block", maxWidth: "100%", height: "auto" }}
-            />
-            <canvas
-              ref={canvasRef}
-              className="canvas"
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            />
+          <div className="image-container bg-[url('t2-p3.png')] bg-center bg-contain bg-no-repeat w-full h-full">
+            <div className=" m-8 px-4 mt-16">
+              <img
+                ref={imgRef}
+                src={currentImage}
+                alt="Labeling"
+                className="image"
+                style={{
+                  display: "block",
+                  width: "auto", // Removes any width restrictions
+                  height: "auto",
+                }}
+              />
+              <canvas
+                ref={canvasRef}
+                className="canvas"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                style={{
+                  position: "absolute", // Ensures the canvas overlays the image
+                  top: 0,
+                  left: 0,
+                }}
+              />
+            </div>
           </div>
-          <button className="next-button" onClick={handleSubmit}>
-            Submit
-          </button>
+
+          <div className="grid grid-cols-3 gap-4">
+            {/* Left column with t2-p5.png */}
+            <div className="flex justify-center items-center">
+              <img
+                src="t2-p5.png"
+                alt="Redraw"
+                className="cursor-pointer"
+                onClick={() => setRectangles([])}
+              />
+            </div>
+
+            {/* Middle and right columns merged with t2-p4.png and Submit text */}
+            <div className="col-span-2 relative flex justify-center items-center">
+              <img
+                src="t2-p4.png"
+                alt="Submit"
+                className="w-full h-auto"
+                onClick={handleSubmit}
+              />
+            </div>
+          </div>
         </>
       ) : (
         <p>Loading images...</p>
