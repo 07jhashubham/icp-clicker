@@ -27,7 +27,7 @@ async function createNewUserIfNotExists(setWalletAddress, createNewUser) {
 }
 
 function App() {
-  const [walletAddress, setWalletAddress] = useState(Cookies.get("WalletAddress") || null);
+  const [walletAddress, setWalletAddress] = useState("user1234");
   const [clickCount, setClickCount] = useState(0);
   const [boxes, setBoxes] = useState([]);
   const [powerupBoxes, setPowerupBoxes] = useState([]);
@@ -241,10 +241,9 @@ function App() {
             console.error("Failed to spawn powerup:", error);
           });
 
-        reset_clicks()
-          .catch((error) => {
-            console.error("Failed to reset clicks:", error);
-          });
+        reset_clicks().catch((error) => {
+          console.error("Failed to reset clicks:", error);
+        });
         return 0;
       } else {
         newValue = value + 1;
