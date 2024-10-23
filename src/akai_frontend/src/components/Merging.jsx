@@ -51,11 +51,9 @@ function AlienBox({ box, index, onDrop }) {
       }}
     >
       <img
-        src="box.png"
+        src="/SVGs/alien-card.svg"
         alt="Container"
         style={{
-          // width: "100%",
-          // height: "100%",
           position: "absolute",
           top: 0,
           left: 0,
@@ -155,7 +153,7 @@ export default function Merging({
           position: "relative",
           width: "100%", // Adjust the size to fit the frame image
           height: "455px",
-          backgroundImage: "url('frame.png')", // Frame image for parent container
+          backgroundImage: "url('/SVGs/frame.svg')", // Frame image for parent container
           backgroundSize: "contain",
           backgroundRepeat: "no-repeat",
           backgroundPosition: "center",
@@ -222,11 +220,12 @@ export default function Merging({
             >
               {/* tpN Image */}
               <img
-                src="tpN.png"
+                src="/SVGs/shard.svg"
                 alt="TPN Image"
                 style={{
                   width: "50px", // Adjust size as needed
                   height: "auto",
+                  marginRight: "10px",
                 }}
                 onContextMenu={disableContextMenu}
               />
@@ -297,7 +296,7 @@ export default function Merging({
           />
           {/* Add tp.png on top of goldRec.png */}
           <img
-            src="tp.png"
+            src="/SVGs/league-holder.svg"
             alt="TP"
             style={{
               position: "absolute",
@@ -348,7 +347,7 @@ export default function Merging({
           >
             {/* Vector Image */}
             <img
-              src="Vector.png"
+              src="/SVGs/ele.svg"
               alt="Vector Icon"
               style={{
                 width: "20px",

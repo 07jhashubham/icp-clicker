@@ -325,7 +325,7 @@ function App() {
           position: "fixed",
           bottom: 0,
           width: "100%",
-          backgroundImage: "url('/Group35.png')",
+          backgroundImage: "url('/SVGs/down.svg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           height: "80px",
