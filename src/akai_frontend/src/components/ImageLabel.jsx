@@ -230,7 +230,7 @@ export default function ImageLabeler() {
   const currentPrompt = "Highlight the person wearing a yellow helmet"; // Static prompt
 
   return (
-    <div className="image-labeler mt-10 w-full">
+    <div className="image-labeler mt-10 w-full relative">
       {selectedImages.length > 0 ? (
         <>
           {/* Prompt Section */}
@@ -310,23 +310,23 @@ export default function ImageLabeler() {
           </div>
 
           {/* Move buttons outside image-container */}
-          <div className="grid grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-3 rp">
             {/* Undo/Redraw Button */}
-            <div className="flex justify-center items-center">
+            <div className=" col-span-1 relative">
               <img
                 src="t2-p5.png"
                 alt="Redraw"
-                className="cursor-pointer"
+                className=""
                 onClick={() => setRectangles([])}
               />
             </div>
 
             {/* Submit Button */}
-            <div className="col-span-2 relative flex justify-center items-center">
+            <div className=" col-span-2 relative">
               <img
                 src="t2-p4.png"
                 alt="Submit"
-                className="w-full h-auto"
+                className=" w-full h-auto"
                 onClick={handleSubmit}
               />
             </div>
