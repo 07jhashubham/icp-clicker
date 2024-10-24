@@ -44,13 +44,13 @@ export default function SidePanel({
           let powerupImage = null;
           switch (box?.type) {
             case "ClickMultiplier":
-              powerupImage = "/SVGs/ppowerup-1.svg";
+              powerupImage = "/SVGs/powerup-1.svg";
               break;
             case "AutoFiller":
-              powerupImage = "/SVGs/ppowerup-2.svg";
+              powerupImage = "/SVGs/powerup-2.svg";
               break;
             case "Spawner":
-              powerupImage = "/SVGs/ppowerup-3.svg";
+              powerupImage = "/SVGs/powerup-3.svg";
               break;
             default:
               powerupImage = null;

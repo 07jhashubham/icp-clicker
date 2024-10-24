@@ -32,6 +32,7 @@ function App() {
   const [boxes, setBoxes] = useState([]);
   const [powerupBoxes, setPowerupBoxes] = useState([]);
   const [selectedIcon, setSelectedIcon] = useState("home");
+  const [loadingProgress, setLoadingProgress] = useState(0);
 
   // Fetch user data
   const { data, call: refetchData } = useQueryCall({
@@ -105,6 +106,20 @@ function App() {
       createNewUserIfNotExists(setWalletAddress, createNewUser);
     }
   }, [walletAddress, createNewUser]);
+
+  useEffect(() => {
+    let progress = 0;
+    const intervalId = setInterval(() => {
+      if (progress < 100) {
+        progress += 2; // Increment by 2%
+        setLoadingProgress(progress);
+      } else {
+        clearInterval(intervalId); // Clear interval when progress reaches 100%
+      }
+    }, 100); // Adjust the interval time (e.g., 100ms for smooth animation)
+
+    return () => clearInterval(intervalId); // Cleanup interval on component unmount
+  }, []);
 
   useEffect(() => {
     // Function to handle any interaction (click or back button press)
@@ -272,7 +287,22 @@ function App() {
 
   // Ensure 'user' is not null before accessing 'user.clicks'
   if (!user || aliensLoading || powerupsLoading) {
-    return <p>Loading data...</p>;
+    return (
+      <div className="loading-screen">
+        <div className="loading-container">
+          <h1>Loading...</h1>
+          <img
+            src="/SVGs/preload3.svg"
+            alt="Loading Progress"
+            className="loading-progress-bar"
+            style={{
+              width: `${loadingProgress}%`,
+              transition: "width 0.3s ease",
+            }}
+          />
+        </div>
+      </div>
+    );
   }
 
   if (aliensError) {

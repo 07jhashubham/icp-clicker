@@ -69,6 +69,7 @@ function AlienBox({ box, index, onDrop }) {
             width: "80%",
             height: "70%",
             objectFit: "contain",
+            marginTop: "28px",
             zIndex: 2,
           }}
         />

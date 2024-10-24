@@ -200,3 +200,31 @@ body {
     scale: 75%;
   }
 }
+
+/* Loading Screen Styles */
+.loading-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-image: url("/SVGs/preload1.svg");
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  text-align: center;
+}
+
+.loading-container {
+  text-align: center;
+}
+
+h1 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+}
+
+.loading-progress-bar {
+  margin-top: 20px;
+  height: 20px;
+  background-color: transparent;
+}
