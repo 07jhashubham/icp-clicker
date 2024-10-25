@@ -1,0 +1,34 @@
+type PowerupType = variant {
+  Spawner;
+  AlienMultiplier;
+  AutoFiller;
+  ClickMultiplier;
+};
+type Result = variant { Ok; Err : text };
+type Result_1 = variant { Ok : text; Err : text };
+type Result_2 = variant { Ok : PowerupType; Err : text };
+type TaskType = variant { AI; Social };
+service : () -> {
+  add_task : (TaskType, text, text, opt text) -> (Result);
+  clear_tasks_occupancy : (vec nat64) -> (Result);
+  combine_aliens : (text, text) -> (Result_1);
+  complete_task : (text, text, text) -> (Result);
+  create_new_user : (text, opt text, opt text, opt text, opt text) -> (Result);
+  dump_and_compress_database : () -> (blob) query;
+  fetch_and_commit_tasks : () -> (Result_1);
+  get_aliens : (text) -> (Result_1);
+  get_all_powerups : (text) -> (Result_1) query;
+  get_all_tasks : () -> (Result_1);
+  get_all_tasks_logs : () -> (Result_1);
+  get_all_users : () -> (text) query;
+  get_user_data : (text) -> (Result_1) query;
+  reset_clicks : (text) -> (Result);
+  spawn_aliens : (text, nat64) -> (Result_1);
+  spawn_random_powerup : (text) -> (Result_2);
+  update_clicks : (text, nat64) -> (Result);
+  update_email : (text, text) -> (Result);
+  update_instagram : (text, text) -> (Result);
+  update_name : (text, opt text) -> (Result);
+  update_twitter : (text, text) -> (Result);
+  use_powerup : (text, nat64) -> (Result);
+}

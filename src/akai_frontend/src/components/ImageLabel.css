@@ -1,0 +1,121 @@
+.image-labeler {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 20px;
+  border-radius: 12px; /* Rounded corners */
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1); /* Light shadow */
+  width: 90%;
+  max-width: 500px; /* Constrain width */
+}
+
+.prompt {
+  margin-bottom: 20px;
+}
+
+.prompt h3 {
+  font-size: 1.5rem;
+  color: #000000;
+  margin: 0;
+  text-align: center;
+}
+
+/* Image container to wrap image and canvas */
+.image-wrapper {
+  position: relative; /* Ensure the canvas overlays the image */
+  width: 100%;
+  max-width: 100%; /* Ensure responsiveness */
+  margin-bottom: 20px; /* Adds space between image/canvas and buttons */
+}
+
+.image,
+.canvas {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%; /* Ensure the image and canvas have the same width */
+  height: auto; /* Maintain aspect ratio */
+  border-radius: 12px; /* Match rounded corners */
+}
+
+/* Style for Undo/Redraw and Submit buttons */
+.grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Create 3-column layout */
+  gap: 10px; /* Add space between buttons */
+}
+
+.cursor-pointer {
+  cursor: pointer;
+}
+
+.col-span-2 {
+  grid-column: span 2; /* Make submit button span 2 columns */
+}
+
+.flex {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.h-auto {
+  height: auto;
+}
+
+.next-button {
+  padding: 10px 20px;
+  font-size: 1rem;
+  color: white;
+  background-color: #e31d1e; /* Red background */
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.next-button:hover {
+  background-color: #d31818; /* Slightly darker red on hover */
+}
+
+/* Responsive behavior for mobile screens */
+@media (min-width: 360px) {
+  .rp {
+    margin-top: 16rem;
+  }
+}
+@media (min-width: 378px) {
+  .rp {
+    margin-top: 19rem;
+  }
+}
+@media (min-width: 388px) {
+  .rp {
+    margin-top: 20rem;
+  }
+}
+@media (min-width: 398px) {
+  .rp {
+    margin-top: 21rem;
+  }
+}
+@media (min-width: 408px) {
+  .rp {
+    margin-top: 22rem;
+  }
+}
+@media (min-width: 418px) {
+  .rp {
+    margin-top: 23rem;
+  }
+}
+@media (min-width: 428px) {
+  .rp {
+    margin-top: 24rem;
+  }
+}
