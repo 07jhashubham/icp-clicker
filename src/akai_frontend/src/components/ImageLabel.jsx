@@ -324,7 +324,7 @@ export default function ImageLabeler() {
             {/* Submit Button */}
             <div className=" col-span-2 relative">
               <img
-                src="t2-p4.png"
+                src="/SVGs/tt3.svg"
                 alt="Submit"
                 className=" w-full h-auto"
                 onClick={handleSubmit}

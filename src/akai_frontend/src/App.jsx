@@ -230,6 +230,9 @@ function App() {
   const handleClick = useCallback(() => {
     if (!walletAddress) return; // Prevent actions if walletAddress is not set
 
+    if (navigator.vibrate) {
+      navigator.vibrate(100);
+    }
     // Update UI immediately
     setClickCount((value) => {
       let newValue;
@@ -374,7 +377,7 @@ function App() {
           onClick={() => handleIconClick("profile")}
         >
           <img
-            src="/profile.png"
+            src="/SVGs/nav2.svg"
             alt="Profile"
             style={{
               width: "40px",
@@ -386,7 +389,7 @@ function App() {
           {/* Conditionally render hover image under profile */}
           {selectedIcon === "profile" && (
             <img
-              src="/hover.png"
+              src="/SVGs/nav1.svg"
               alt="Hover"
               style={{
                 width: "40px",
@@ -408,7 +411,7 @@ function App() {
           onClick={() => handleIconClick("home")}
         >
           <img
-            src="/home.png"
+            src="/SVGs/nav3.svg"
             alt="Home"
             style={{
               width: "40px",
@@ -420,7 +423,7 @@ function App() {
           {/* Conditionally render hover image under home */}
           {selectedIcon === "home" && (
             <img
-              src="/hover.png"
+              src="/SVGs/nav1.svg"
               alt="Hover"
               style={{
                 width: "40px",
@@ -442,7 +445,7 @@ function App() {
           onClick={() => handleIconClick("task")}
         >
           <img
-            src="/task.png"
+            src="/SVGs/nav4.svg"
             alt="Task"
             style={{
               width: "40px",
@@ -454,7 +457,7 @@ function App() {
           {/* Conditionally render hover image under task */}
           {selectedIcon === "task" && (
             <img
-              src="/hover.png"
+              src="/SVGs/nav1.svg"
               alt="Hover"
               style={{
                 width: "40px",
