@@ -27,11 +27,12 @@ async function createNewUserIfNotExists(setWalletAddress, createNewUser) {
 }
 
 function App() {
-  const [walletAddress, setWalletAddress] = useState(Cookies.get("WalletAddress") || null);
+  const [walletAddress, setWalletAddress] = useState("user1234");
   const [clickCount, setClickCount] = useState(0);
   const [boxes, setBoxes] = useState([]);
   const [powerupBoxes, setPowerupBoxes] = useState([]);
   const [selectedIcon, setSelectedIcon] = useState("home");
+  const [loadingProgress, setLoadingProgress] = useState(0);
 
   // Fetch user data
   const { data, call: refetchData } = useQueryCall({
@@ -105,6 +106,20 @@ function App() {
       createNewUserIfNotExists(setWalletAddress, createNewUser);
     }
   }, [walletAddress, createNewUser]);
+
+  useEffect(() => {
+    let progress = 0;
+    const intervalId = setInterval(() => {
+      if (progress < 100) {
+        progress += 2; // Increment by 2%
+        setLoadingProgress(progress);
+      } else {
+        clearInterval(intervalId); // Clear interval when progress reaches 100%
+      }
+    }, 100); // Adjust the interval time (e.g., 100ms for smooth animation)
+
+    return () => clearInterval(intervalId); // Cleanup interval on component unmount
+  }, []);
 
   useEffect(() => {
     // Function to handle any interaction (click or back button press)
@@ -215,6 +230,9 @@ function App() {
   const handleClick = useCallback(() => {
     if (!walletAddress) return; // Prevent actions if walletAddress is not set
 
+    if (navigator.vibrate) {
+      navigator.vibrate(100);
+    }
     // Update UI immediately
     setClickCount((value) => {
       let newValue;
@@ -241,10 +259,9 @@ function App() {
             console.error("Failed to spawn powerup:", error);
           });
 
-        reset_clicks()
-          .catch((error) => {
-            console.error("Failed to reset clicks:", error);
-          });
+        reset_clicks().catch((error) => {
+          console.error("Failed to reset clicks:", error);
+        });
         return 0;
       } else {
         newValue = value + 1;
@@ -273,7 +290,22 @@ function App() {
 
   // Ensure 'user' is not null before accessing 'user.clicks'
   if (!user || aliensLoading || powerupsLoading) {
-    return <p>Loading data...</p>;
+    return (
+      <div className="loading-screen">
+        <div className="loading-container">
+          <h1>Loading...</h1>
+          <img
+            src="/SVGs/preload3.svg"
+            alt="Loading Progress"
+            className="loading-progress-bar"
+            style={{
+              width: `${loadingProgress}%`,
+              transition: "width 0.3s ease",
+            }}
+          />
+        </div>
+      </div>
+    );
   }
 
   if (aliensError) {
@@ -326,7 +358,7 @@ function App() {
           position: "fixed",
           bottom: 0,
           width: "100%",
-          backgroundImage: "url('/Group35.png')",
+          backgroundImage: "url('/SVGs/down.svg')",
           backgroundSize: "cover",
           backgroundPosition: "center",
           height: "80px",
@@ -345,7 +377,7 @@ function App() {
           onClick={() => handleIconClick("profile")}
         >
           <img
-            src="/profile.png"
+            src="/SVGs/nav2.svg"
             alt="Profile"
             style={{
               width: "40px",
@@ -357,7 +389,7 @@ function App() {
           {/* Conditionally render hover image under profile */}
           {selectedIcon === "profile" && (
             <img
-              src="/hover.png"
+              src="/SVGs/nav1.svg"
               alt="Hover"
               style={{
                 width: "40px",
@@ -379,7 +411,7 @@ function App() {
           onClick={() => handleIconClick("home")}
         >
           <img
-            src="/home.png"
+            src="/SVGs/nav3.svg"
             alt="Home"
             style={{
               width: "40px",
@@ -391,7 +423,7 @@ function App() {
           {/* Conditionally render hover image under home */}
           {selectedIcon === "home" && (
             <img
-              src="/hover.png"
+              src="/SVGs/nav1.svg"
               alt="Hover"
               style={{
                 width: "40px",
@@ -413,7 +445,7 @@ function App() {
           onClick={() => handleIconClick("task")}
         >
           <img
-            src="/task.png"
+            src="/SVGs/nav4.svg"
             alt="Task"
             style={{
               width: "40px",
@@ -425,7 +457,7 @@ function App() {
           {/* Conditionally render hover image under task */}
           {selectedIcon === "task" && (
             <img
-              src="/hover.png"
+              src="/SVGs/nav1.svg"
               alt="Hover"
               style={{
                 width: "40px",

@@ -17,7 +17,7 @@ function UserProfile({ user }) {
         <div className="user-panel-text flex flex-row justify-between px-5 w-full">
           <div className="flex items-center space-x-4">
             <img
-              src="/l1profile.png"
+              src="/SVGs/profile.svg"
               alt="Profile"
               className="mt-6 scale-125"
               onContextMenu={disableContextMenu}
@@ -52,9 +52,9 @@ function UserProfile({ user }) {
             {/* Centered text over the image */}
             <div className="absolute w-full h-full flex items-center text-white font-sans justify-around">
               <img
-                src="spoofCoin.png"
+                src="/SVGs/ele.svg"
                 alt="Spoof Coin"
-                className="scale-150"
+                className="scale-150  w-auto h-[10px] mr-4"
                 onContextMenu={disableContextMenu}
               />
               <p>{user ? user.clicks : "Loading..."}</p>
@@ -72,9 +72,9 @@ function UserProfile({ user }) {
             {/* Centered text over the image */}
             <div className="absolute w-full h-full flex items-center text-white font-sans justify-around">
               <img
-                src="mainCoin.png"
+                src="tok.png"
                 alt="Main Coin"
-                className="scale-125"
+                className="scale-125 w-auto h-[10px] mr-4"
                 onContextMenu={disableContextMenu}
               />
               <p>{user ? user.exp : "Loading..."}</p>

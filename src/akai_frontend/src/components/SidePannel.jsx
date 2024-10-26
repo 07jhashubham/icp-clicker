@@ -1,7 +1,11 @@
 import { useUpdateCall } from "@ic-reactor/react";
 import React from "react";
 
-export default function SidePanel({ walletAddress, powerupBoxes, setPowerupBoxes }) {
+export default function SidePanel({
+  walletAddress,
+  powerupBoxes,
+  setPowerupBoxes,
+}) {
   console.log(powerupBoxes);
 
   const { call: use_powerup } = useUpdateCall({
@@ -27,7 +31,7 @@ export default function SidePanel({ walletAddress, powerupBoxes, setPowerupBoxes
     <div className="side-panel-container relative -ml-4">
       {/* Main Image */}
       <img
-        src="/check.png"
+        src="/SVGs/powerup-holder.svg"
         alt="Check Background"
         className="check-image"
         onContextMenu={disableContextMenu}
@@ -40,13 +44,13 @@ export default function SidePanel({ walletAddress, powerupBoxes, setPowerupBoxes
           let powerupImage = null;
           switch (box?.type) {
             case "ClickMultiplier":
-              powerupImage = "/group1.png";
+              powerupImage = "/SVGs/powerup-1.svg";
               break;
             case "AutoFiller":
-              powerupImage = "/group2.png";
+              powerupImage = "/SVGs/powerup-2.svg";
               break;
             case "Spawner":
-              powerupImage = "/group3.png";
+              powerupImage = "/SVGs/powerup-3.svg";
               break;
             default:
               powerupImage = null;

@@ -92,13 +92,6 @@ body {
   margin-top: 70px;
 }
 
-.incubator-fill {
-  position: absolute;
-  bottom: 0;
-  left: 0;
-  width: 100%;
-}
-
 /* Side Panel Container */
 .side-panel-container {
   position: fixed;
@@ -129,11 +122,17 @@ body {
 /* Media Queries for Responsive Design */
 
 /* For small screens */
-@media (max-width: 400px) {
+@media (max-width: 440px) {
   .responsive-image {
     max-height: 50vh; /* Height for screens 400px and below */
   }
-
+  .incubator-fill {
+    position: absolute;
+    bottom: 50;
+    left: 50;
+    width: 35%;
+    height: 18rem;
+  }
   .side-panel-icon {
     max-width: 50px;
     margin-left: -20px;
@@ -156,6 +155,13 @@ body {
 @media (max-width: 390px) {
   .responsive-image {
     max-height: 45vh; /* Height for screens 390px and below */
+  }
+  .incubator-fill {
+    position: absolute;
+    bottom: 50;
+    left: 50;
+    width: 30%;
+    height: 15rem;
   }
 
   .side-panel-icon {
@@ -181,6 +187,14 @@ body {
     max-height: 40vh; /* Height for screens 380px and below */
   }
 
+  .incubator-fill {
+    position: absolute;
+    bottom: 50;
+    left: 50;
+    width: 20%;
+    height: 12rem;
+  }
+
   .side-panel-icon {
     max-width: 40px;
     margin-left: -40px;
@@ -198,5 +212,54 @@ body {
   }
   .box12Container {
     scale: 75%;
+  }
+}
+
+/* Loading Screen Styles */
+.loading-screen {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  height: 100vh;
+  background-image: url("/SVGs/preload1.svg");
+  background-size: cover;
+  background-position: center;
+  position: relative;
+  text-align: center;
+}
+
+.loading-container {
+  text-align: center;
+}
+
+h1 {
+  font-size: 2rem;
+  margin-bottom: 20px;
+}
+
+.loading-progress-bar {
+  margin-top: 20px;
+  height: 20px;
+  background-color: transparent;
+}
+
+.neon-green-bloom {
+  background: linear-gradient(145deg, #32ff7e, #00ff5f);
+  border-radius: 8px; /* Adjust as needed */
+  box-shadow: 0 0 10px #32ff7e, 0 0 20px #32ff7e, 0 0 30px #00ff5f,
+    0 0 40px #00ff5f, 0 0 50px #00ff5f;
+  /* Add animations for a more immersive feel */
+  animation: glow 1.5s ease-in-out infinite alternate;
+}
+
+/* Optional: Glow animation */
+@keyframes glow {
+  from {
+    box-shadow: 0 0 10px #32ff7e, 0 0 20px #32ff7e, 0 0 30px #00ff5f,
+      0 0 40px #00ff5f;
+  }
+  to {
+    box-shadow: 0 0 15px #32ff7e, 0 0 25px #32ff7e, 0 0 35px #00ff5f,
+      0 0 45px #00ff5f;
   }
 }

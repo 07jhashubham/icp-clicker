@@ -34,6 +34,7 @@ export default function ImageLabeler() {
       });
   }, []);
 
+  // Adjust the canvas size based on the image
   useEffect(() => {
     const img = imgRef.current;
     const canvas = canvasRef.current;
@@ -42,10 +43,10 @@ export default function ImageLabeler() {
       return; // Exit if img or canvas is not yet loaded
     }
 
-    // Adjust canvas size to match the image size when the image loads
     const handleImageLoad = () => {
-      canvas.width = img.width;
-      canvas.height = img.height;
+      // Ensure canvas size matches the image size
+      canvas.width = img.clientWidth;
+      canvas.height = img.clientHeight;
     };
 
     img.addEventListener("load", handleImageLoad);
@@ -55,6 +56,7 @@ export default function ImageLabeler() {
     };
   }, [currentIndex, selectedImages]);
 
+  // Handle drawing the rectangles on the canvas
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return; // Exit if canvas is not available
@@ -71,34 +73,56 @@ export default function ImageLabeler() {
     });
   }, [rectangles]);
 
+  // Start drawing a new rectangle
   const handleStart = (x, y) => {
     const canvas = canvasRef.current;
-    const rect = canvas.getBoundingClientRect();
-    setStartPoint({
-      x: x - rect.left,
-      y: y - rect.top,
-    });
+    const img = imgRef.current;
+
+    // Get the canvas and image bounding rectangles
+    const canvasRect = canvas.getBoundingClientRect();
+    const imgRect = img.getBoundingClientRect();
+
+    // Debug: Log the canvas and image bounding rectangles
+    console.log("Canvas bounding rect:", canvasRect);
+    console.log("Image bounding rect:", imgRect);
+
+    // Debug: Log the sizes of both the canvas and the image
+    console.log("Canvas size:", { width: canvas.width, height: canvas.height });
+    console.log("Image size:", { width: img.width, height: img.height });
+
+    // Continue with normal coordinate calculation for canvas-relative position
+    const canvasX = x - canvasRect.left;
+    const canvasY = y - canvasRect.top;
+
+    console.log("Canvas-relative start coordinates:", { canvasX, canvasY });
+
+    setStartPoint({ x: canvasX, y: canvasY });
     setIsDrawing(true);
 
-    // Start a new rectangle
     setRectangles([
       ...rectangles,
       {
-        x: x - rect.left,
-        y: y - rect.top,
+        x: canvasX,
+        y: canvasY,
         width: 0,
         height: 0,
       },
     ]);
   };
 
+  // Update the rectangle as the user moves the mouse
   const handleMove = (x, y) => {
     if (!isDrawing) return;
 
     const canvas = canvasRef.current;
     const rect = canvas.getBoundingClientRect();
-    const width = x - rect.left - startPoint.x;
-    const height = y - rect.top - startPoint.y;
+
+    // Adjust for precise coordinates by accounting for canvas offset
+    const canvasX = x - rect.left;
+    const canvasY = y - rect.top;
+
+    const width = canvasX - startPoint.x;
+    const height = canvasY - startPoint.y;
 
     // Update the last rectangle being drawn
     const updatedRectangles = [...rectangles];
@@ -111,6 +135,7 @@ export default function ImageLabeler() {
     setRectangles(updatedRectangles);
   };
 
+  // Handle mouse events for drawing
   const handleMouseDown = (e) => {
     e.preventDefault(); // Prevent default behavior
     handleStart(e.clientX, e.clientY);
@@ -126,6 +151,7 @@ export default function ImageLabeler() {
     setIsDrawing(false);
   };
 
+  // Handle touch events for drawing
   const handleTouchStart = (e) => {
     e.preventDefault(); // Prevent touch scrolling
     const touch = e.touches[0]; // Only handle single touch
@@ -148,6 +174,7 @@ export default function ImageLabeler() {
     return "0x" + Math.random().toString(36).substring(2, 15).toUpperCase();
   };
 
+  // Submit the drawn rectangles
   const handleSubmit = () => {
     if (rectangles.length === 0) {
       return alert("Please draw a bounding box before submitting.");
@@ -188,6 +215,7 @@ export default function ImageLabeler() {
     handleNextImage();
   };
 
+  // Move to the next image
   const handleNextImage = () => {
     if (currentIndex < selectedImages.length - 1) {
       setCurrentIndex(currentIndex + 1);
@@ -202,34 +230,107 @@ export default function ImageLabeler() {
   const currentPrompt = "Highlight the person wearing a yellow helmet"; // Static prompt
 
   return (
-    <div className="image-labeler">
+    <div className="image-labeler mt-10 w-full relative">
       {selectedImages.length > 0 ? (
         <>
-          <div className="prompt">
-            <h3>{currentPrompt}</h3>
+          {/* Prompt Section */}
+          <div className="prompt relative w-full">
+            {/* Left side image */}
+            <div className="fixed mt-16 top-0 left-0">
+              <div className="relative w-48 h-16">
+                <img
+                  src="t2-p2.png"
+                  alt=""
+                  className="absolute inset-0 w-full h-full "
+                />
+                <img
+                  src="t2-p6.png"
+                  alt=""
+                  className="absolute inset-0 w-full h-full "
+                />
+              </div>
+            </div>
+
+            {/* Right side image */}
+            <div className="fixed mt-16 top-0 right-0">
+              <div className="relative w-48 h-16">
+                <img
+                  src="t2-p2.png"
+                  alt=""
+                  className="absolute inset-0 w-full h-full transform scale-x-[-1]"
+                />
+                <img
+                  src="t2-p6.png"
+                  alt=""
+                  className="absolute inset-0 w-full h-full transform scale-x-[-1]"
+                />
+              </div>
+            </div>
+
+            {/* Center content */}
+            <div className="flex-grow flex justify-center items-center z-20 ">
+              <div className="bg-[url('/t2-p1.png')] scale-125 bg-contain bg-no-repeat bg-center flex justify-center items-center">
+                <h3 className="scale-50 font-mono font-bold text-black">
+                  {currentPrompt}
+                </h3>
+              </div>
+            </div>
           </div>
-          <div className="image-container">
-            <img
-              ref={imgRef}
-              src={currentImage}
-              alt="Labeling"
-              className="image"
-              style={{ display: "block", maxWidth: "100%", height: "auto" }}
-            />
-            <canvas
-              ref={canvasRef}
-              className="canvas"
-              onMouseDown={handleMouseDown}
-              onMouseMove={handleMouseMove}
-              onMouseUp={handleMouseUp}
-              onTouchStart={handleTouchStart}
-              onTouchMove={handleTouchMove}
-              onTouchEnd={handleTouchEnd}
-            />
+
+          {/* Image and Canvas Wrapper */}
+          <div className="relative image-wrapper bg-[url('t2-p3.png')] bg-center bg-contain bg-no-repeat w-full h-full mb-8">
+            <div className="m-8 px-4 mt-16">
+              <img
+                ref={imgRef}
+                src={currentImage}
+                alt="Labeling"
+                className="image"
+                style={{
+                  display: "block",
+                  width: "auto",
+                  height: "auto",
+                }}
+              />
+              <canvas
+                ref={canvasRef}
+                className="canvas"
+                onMouseDown={handleMouseDown}
+                onMouseMove={handleMouseMove}
+                onMouseUp={handleMouseUp}
+                onTouchStart={handleTouchStart}
+                onTouchMove={handleTouchMove}
+                onTouchEnd={handleTouchEnd}
+                style={{
+                  position: "absolute", // Ensures the canvas overlays the image
+                  top: 0,
+                  left: 0,
+                }}
+              />
+            </div>
           </div>
-          <button className="next-button" onClick={handleSubmit}>
-            Submit
-          </button>
+
+          {/* Move buttons outside image-container */}
+          <div className="grid grid-cols-3 rp">
+            {/* Undo/Redraw Button */}
+            <div className=" col-span-1 relative">
+              <img
+                src="t2-p5.png"
+                alt="Redraw"
+                className=""
+                onClick={() => setRectangles([])}
+              />
+            </div>
+
+            {/* Submit Button */}
+            <div className=" col-span-2 relative">
+              <img
+                src="/SVGs/tt3.svg"
+                alt="Submit"
+                className=" w-full h-auto"
+                onClick={handleSubmit}
+              />
+            </div>
+          </div>
         </>
       ) : (
         <p>Loading images...</p>
