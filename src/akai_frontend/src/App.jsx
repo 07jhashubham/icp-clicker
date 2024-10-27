@@ -6,7 +6,7 @@ import UserProfile from "./components/UserProfile";
 import "./index.css";
 import { useAuth, useQueryCall, useUpdateCall } from "@ic-reactor/react";
 import ImageLabeler from "./components/ImageLabel";
-import Cookies from "js-cookie"; // Import Cookies
+import ConnectScreen from "./components/ConnectScreen";
 
 async function createOrGetUserDataByInternetIdentity(
   walletAddress,
@@ -39,7 +39,7 @@ async function createOrGetUserDataByInternetIdentity(
 
 function App() {
   const { login, logout, authenticated, identity } = useAuth();
-  // login();
+
   const [walletAddress, setWalletAddress] = useState("");
 
   useEffect(() => {
@@ -48,17 +48,41 @@ function App() {
     }
   }, [identity]);
 
+  const [isConnected, setIsConnected] = useState(false);
   const [clickCount, setClickCount] = useState(0);
   const [boxes, setBoxes] = useState([]);
   const [powerupBoxes, setPowerupBoxes] = useState([]);
   const [selectedIcon, setSelectedIcon] = useState("home");
   const [loadingProgress, setLoadingProgress] = useState(0);
 
+  const handleConnect = () => {
+    login();
+    setIsConnected(true);
+    setWalletAddress(identity.getPrincipal().toString());
+    if (walletAddress && createNewUser) {
+      console.log("Wallet Address:", walletAddress);
+      createOrGetUserDataByInternetIdentity(
+        walletAddress,
+        refetchData,
+        createNewUser
+      )
+        .then((result) => {
+          console.log("User data fetched/created:", result);
+        })
+        .catch((error) => {
+          console.error(
+            "Error in createOrGetUserDataByInternetIdentity:",
+            error
+          );
+        });
+    }
+  };
+
   // Fetch user data
   const { data, call: refetchData } = useQueryCall({
     functionName: "get_user_data",
-    args: walletAddress ? [walletAddress] : [], // Use empty array instead of null
-    enabled: !!walletAddress, // Ensure the query is only enabled when walletAddress is set
+    args: walletAddress ? [walletAddress] : [],
+    enabled: !!walletAddress && isConnected,
   });
 
   const disableContextMenu = (e) => {
@@ -70,24 +94,22 @@ function App() {
     data: aliensData,
     call: refetchAliens,
     loading: aliensLoading,
-    error: aliensError,
+    error: aliensError, // Add error destructuring
   } = useQueryCall({
     functionName: "get_aliens",
     args: walletAddress ? [walletAddress] : [],
-    refetchOnMount: true,
-    enabled: !!walletAddress,
+    enabled: !!walletAddress && isConnected,
   });
 
   const {
     data: powerupsData,
     call: refetchPowerups,
     loading: powerupsLoading,
-    error: powerupsError,
+    error: powerupsError, // Add error destructuring
   } = useQueryCall({
     functionName: "get_all_powerups",
     args: walletAddress ? [walletAddress] : [],
-    refetchOnMount: true,
-    enabled: !!walletAddress,
+    enabled: !!walletAddress && isConnected,
   });
 
   const { call: spawn_aliens } = useUpdateCall({
@@ -119,26 +141,6 @@ function App() {
     args: walletAddress ? [walletAddress, 1] : [],
     enabled: !!walletAddress,
   });
-
-  useEffect(() => {
-    if (walletAddress && createNewUser) {
-      console.log("Wallet Address:", walletAddress);
-      createOrGetUserDataByInternetIdentity(
-        walletAddress,
-        refetchData,
-        createNewUser
-      )
-        .then((result) => {
-          console.log("User data fetched/created:", result);
-        })
-        .catch((error) => {
-          console.error(
-            "Error in createOrGetUserDataByInternetIdentity:",
-            error
-          );
-        });
-    }
-  }, [walletAddress]);
 
   useEffect(() => {
     let progress = 0;
@@ -321,6 +323,12 @@ function App() {
     boxes.length,
   ]);
 
+  if (!isConnected) {
+    return (
+      <ConnectScreen walletAddress={walletAddress} onConnect={handleConnect} />
+    );
+  }
+
   // Ensure 'user' is not null before accessing 'user.clicks'
   if (!user || aliensLoading || powerupsLoading) {
     return (
@@ -348,8 +356,6 @@ function App() {
   if (powerupsError) {
     return <p>Error loading powerups data.</p>;
   }
-  // Now it's safe to access 'user.clicks'
-  console.log(user.clicks);
 
   const handleIconClick = (icon) => {
     setSelectedIcon(icon); // Set the selected icon state
