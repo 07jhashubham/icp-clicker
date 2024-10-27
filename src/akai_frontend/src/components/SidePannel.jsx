@@ -6,8 +6,6 @@ export default function SidePanel({
   powerupBoxes,
   setPowerupBoxes,
 }) {
-  console.log(powerupBoxes);
-
   const { call: use_powerup } = useUpdateCall({
     functionName: "use_powerup",
   });
