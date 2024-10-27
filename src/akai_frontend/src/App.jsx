@@ -4,30 +4,50 @@ import Merging from "./components/Merging";
 import SidePanel from "./components/SidePannel";
 import UserProfile from "./components/UserProfile";
 import "./index.css";
-import { useQueryCall, useUpdateCall } from "@ic-reactor/react";
+import { useAuth, useQueryCall, useUpdateCall } from "@ic-reactor/react";
 import ImageLabeler from "./components/ImageLabel";
 import Cookies from "js-cookie"; // Import Cookies
 
-async function createNewUserIfNotExists(setWalletAddress, createNewUser) {
-  const existingWalletAddress = Cookies.get("WalletAddress");
-  if (existingWalletAddress) {
-    setWalletAddress(existingWalletAddress);
-    return existingWalletAddress;
+async function createOrGetUserDataByInternetIdentity(
+  walletAddress,
+  refetchData,
+  createNewUser
+) {
+  try {
+    // Try fetching the user data using refetchData
+    let userData = await refetchData();
+
+    // If user data exists, return it
+    if (userData && userData.Ok) {
+      return userData;
+    }
+
+    // If user data doesn't exist, create a new user
+    await createNewUser([walletAddress, [], [], [], []]);
+    console.log("New User Created with Wallet Address: ", walletAddress);
+
+    // After creating a new user, fetch the user data again
+    userData = await refetchData();
+
+    // Return the newly created user data
+    return userData;
+  } catch (error) {
+    console.error("Error fetching or creating user data:", error);
+    throw new Error("Unable to get or create user data.");
   }
-
-  const RandomWalletAddress = Math.random().toString(36).substring(2, 15);
-
-  // Use [] to represent optional empty text fields
-  const response = await createNewUser([RandomWalletAddress, [], [], [], []]);
-
-  console.log("New User Created with Wallet Address: ", RandomWalletAddress);
-  Cookies.set("WalletAddress", RandomWalletAddress);
-  setWalletAddress(RandomWalletAddress);
-  return RandomWalletAddress;
 }
 
 function App() {
-  const [walletAddress, setWalletAddress] = useState("user1234");
+  const { login, logout, authenticated, identity } = useAuth();
+  // login();
+  const [walletAddress, setWalletAddress] = useState("");
+
+  useEffect(() => {
+    if (identity) {
+      setWalletAddress(identity.getPrincipal().toString());
+    }
+  }, [identity]);
+
   const [clickCount, setClickCount] = useState(0);
   const [boxes, setBoxes] = useState([]);
   const [powerupBoxes, setPowerupBoxes] = useState([]);
@@ -101,11 +121,24 @@ function App() {
   });
 
   useEffect(() => {
-    // Create user if not exists when the app loads
-    if (!walletAddress) {
-      createNewUserIfNotExists(setWalletAddress, createNewUser);
+    if (walletAddress && createNewUser) {
+      console.log("Wallet Address:", walletAddress);
+      createOrGetUserDataByInternetIdentity(
+        walletAddress,
+        refetchData,
+        createNewUser
+      )
+        .then((result) => {
+          console.log("User data fetched/created:", result);
+        })
+        .catch((error) => {
+          console.error(
+            "Error in createOrGetUserDataByInternetIdentity:",
+            error
+          );
+        });
     }
-  }, [walletAddress, createNewUser]);
+  }, [walletAddress]);
 
   useEffect(() => {
     let progress = 0;
