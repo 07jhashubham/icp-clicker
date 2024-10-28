@@ -5,7 +5,7 @@ import "./index.css";
 import { ActorProvider, AgentProvider } from "@ic-reactor/react";
 import { idlFactory, canisterId } from "../../declarations/akai_backend";
 
-export const LOCAL_BUILD = false;
+export const LOCAL_BUILD = true;
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
