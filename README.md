@@ -2,6 +2,9 @@
 
 Contains the necessary documentation for seamless audits and bug fixing
 
+## If developing locally set the const LOCAL_BUILD as true (app.jsx)
+![local testing](image-1.png)
+
 ## Task Settlement Logic
 
 ![image](https://github.com/user-attachments/assets/203cabd1-173c-4ff6-af3d-61cc56985a8e)

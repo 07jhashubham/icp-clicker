@@ -8,6 +8,8 @@ import { useAuth, useAuthState, useQueryCall, useUpdateCall } from "@ic-reactor/
 import ImageLabeler from "./components/ImageLabel";
 import Cookies from "js-cookie"; // Import Cookies
 import Login from "./components/Login";
+import { LOCAL_BUILD } from "./main";
+import { Principal } from "@dfinity/principal";
 
 async function createOrGetUserDataByInternetIdentity(
   walletAddress,
@@ -41,7 +43,7 @@ async function createOrGetUserDataByInternetIdentity(
 function App() {
   const { authenticated, identity } = useAuthState();
   // login();
-  const [walletAddress, setWalletAddress] = useState("");
+  const [walletAddress, setWalletAddress] = useState(LOCAL_BUILD ? Principal.anonymous().toText() : null);
   const [clickCount, setClickCount] = useState(0);
   const [boxes, setBoxes] = useState([]);
   const [powerupBoxes, setPowerupBoxes] = useState([]);
@@ -52,7 +54,6 @@ function App() {
     if (identity && authenticated) {
       console.log("Identity:", identity);
       const principal = identity.getPrincipal();
-
       if (!principal.isAnonymous()){
         setWalletAddress(principal.toText());
       }
@@ -327,7 +328,7 @@ function App() {
     boxes.length,
   ]);
 
-  if (!authenticated){
+  if (!authenticated && !LOCAL_BUILD){
     return (
       <Login />
     )
