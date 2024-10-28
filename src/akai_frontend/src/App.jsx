@@ -4,9 +4,10 @@ import Merging from "./components/Merging";
 import SidePanel from "./components/SidePannel";
 import UserProfile from "./components/UserProfile";
 import "./index.css";
-import { useAuth, useQueryCall, useUpdateCall } from "@ic-reactor/react";
+import { useAuth, useAuthState, useQueryCall, useUpdateCall } from "@ic-reactor/react";
 import ImageLabeler from "./components/ImageLabel";
 import Cookies from "js-cookie"; // Import Cookies
+import Login from "./components/Login";
 
 async function createOrGetUserDataByInternetIdentity(
   walletAddress,
@@ -38,21 +39,26 @@ async function createOrGetUserDataByInternetIdentity(
 }
 
 function App() {
-  const { login, logout, authenticated, identity } = useAuth();
+  const { authenticated, identity } = useAuthState();
   // login();
   const [walletAddress, setWalletAddress] = useState("");
-
-  useEffect(() => {
-    if (identity) {
-      setWalletAddress(identity.getPrincipal().toString());
-    }
-  }, [identity]);
-
   const [clickCount, setClickCount] = useState(0);
   const [boxes, setBoxes] = useState([]);
   const [powerupBoxes, setPowerupBoxes] = useState([]);
   const [selectedIcon, setSelectedIcon] = useState("home");
   const [loadingProgress, setLoadingProgress] = useState(0);
+
+  useEffect(() => {
+    if (identity && authenticated) {
+      console.log("Identity:", identity);
+      const principal = identity.getPrincipal();
+
+      if (!principal.isAnonymous()){
+        setWalletAddress(principal.toText());
+      }
+    }
+  }, [identity]);
+
 
   // Fetch user data
   const { data, call: refetchData } = useQueryCall({
@@ -321,6 +327,11 @@ function App() {
     boxes.length,
   ]);
 
+  if (!authenticated){
+    return (
+      <Login />
+    )
+  }
   // Ensure 'user' is not null before accessing 'user.clicks'
   if (!user || aliensLoading || powerupsLoading) {
     return (
