@@ -6,10 +6,16 @@ import { isMobile } from "react-device-detect";
 import { useUpdateCall } from "@ic-reactor/react";
 //chaneg to alien list functionality
 const alienImages = [
-  "alien-1.png",
-  "alien-2.png",
-  "alien-3.png",
-  "alien-4.png",
+  "SVGs/alien-1.svg",
+  "SVGs/alien-2.svg",
+  "SVGs/alien-3.svg",
+  "SVGs/alien-4.svg",
+  "SVGs/alien-5.svg",
+  "SVGs/alien-6.svg",
+  "SVGs/alien-7.svg",
+  "SVGs/alien-8.svg",
+  "SVGs/alien-9.svg",
+  "SVGs/alien-10.svg",
 ];
 
 const ItemType = "ALIEN";
